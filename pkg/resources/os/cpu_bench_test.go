@@ -19,7 +19,11 @@ func BenchmarkCPUOSLazy_Used_Sys(b *testing.B) {
 	done := make(chan struct{})
 	defer close(done)
 
-	cpu, err := os.NewCPULazy(done, f, 600*time.Millisecond)
+	cnf := rescommon.NewResourceConfig(rescommon.ResourceType_OS, rescommon.CPUfilenameInfoProc)
+	require.Nil(b, cnf.Init())
+	defer cnf.Stop()
+
+	cpu, err := os.NewCPULazy(done, cnf, 600*time.Millisecond)
 	require.Nil(b, err)
 	defer cpu.Stop()
 

@@ -7,12 +7,10 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-var _ rescommon.Resourcer = (*MemOSSimple)(nil)
-
 type MemOSSimple struct{}
 
-func NewMemSimple() *MemOSSimple {
-	return &MemOSSimple{}
+func NewMemSimple() (rescommon.ResourceViewer, error) {
+	return &MemOSSimple{}, nil
 }
 
 func (mem *MemOSSimple) info() (uint64, uint64, error) {
@@ -38,5 +36,3 @@ func (mem *MemOSSimple) Used() float64 {
 
 	return utils.Percent(float64(used), float64(total))
 }
-
-func (mem *MemOSSimple) Stop() {}

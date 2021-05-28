@@ -4,35 +4,50 @@ import (
 	"io"
 	"time"
 
+	"github.com/ovsinc/errors"
 	"github.com/ovsinc/resources-rate-limits/internal/utils"
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 
 	"go.uber.org/atomic"
 )
 
-var _ rescommon.Resourcer = (*CPUOSLazy)(nil)
-
 type CPUOSLazy struct {
+	dur         time.Duration
 	f           io.ReadSeekCloser
 	utilization *atomic.Float64
 	tick        *time.Ticker
+	done        chan struct{}
 }
 
-func NewCPULazy(done chan struct{}, f io.ReadSeekCloser, dur time.Duration) (*CPUOSLazy, error) {
+func NewCPULazy(
+	done chan struct{},
+	conf rescommon.ResourceConfiger,
+	dur time.Duration,
+) (rescommon.Resourcer, error) {
 	if dur <= 0 {
 		return nil, rescommon.ErrTickPeriodZero
+	}
+
+	if conf == nil {
+		return nil, rescommon.ErrNoResourceConfig
+	}
+
+	f := conf.File(rescommon.CPUfilenameInfoProc)
+	if f == nil {
+		return nil, rescommon.ErrNoResourceReadFile.
+			WithOptions(
+				errors.AppendContextInfo("f", rescommon.CPUfilenameInfoProc),
+			)
 	}
 
 	cpu := &CPUOSLazy{
 		f:           f,
 		utilization: &atomic.Float64{},
-		tick:        time.NewTicker(dur),
+		dur:         dur,
+		done:        done,
 	}
 
-	err := cpu.init(done)
-	if err != nil {
-		return nil, err
-	}
+	cpu.init()
 
 	// подождем для стабилизации 2 tick-периода + немного еще
 	time.Sleep(2*dur + 100*time.Millisecond)
@@ -45,7 +60,6 @@ func (cpu *CPUOSLazy) Used() float64 {
 }
 
 func (cpu *CPUOSLazy) Stop() {
-	cpu.f.Close()
 	cpu.tick.Stop()
 }
 
@@ -53,9 +67,10 @@ func (cpu *CPUOSLazy) info() (total uint64, used uint64, err error) {
 	return getCPUInfo(cpu.f)
 }
 
-func (cpu *CPUOSLazy) init(done chan struct{}) error {
+func (cpu *CPUOSLazy) init() {
+	cpu.tick = time.NewTicker(cpu.dur)
+
 	var (
-		errGlob   atomic.Error
 		lastused  uint64
 		lasttotal uint64
 	)
@@ -63,14 +78,13 @@ func (cpu *CPUOSLazy) init(done chan struct{}) error {
 	go func() {
 		for {
 			select {
-			case <-done:
+			case <-cpu.done:
 				return
 
 			case <-cpu.tick.C:
 				total, used, err := cpu.info()
 				if err != nil {
-					errGlob.Store(err)
-					return
+					cpu.utilization.Store(0)
 				}
 
 				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
@@ -84,6 +98,4 @@ func (cpu *CPUOSLazy) init(done chan struct{}) error {
 			}
 		}
 	}()
-
-	return errGlob.Load()
 }

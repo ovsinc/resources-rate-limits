@@ -3,9 +3,7 @@ package main
 import (
 	"net/http"
 
-	rate "github.com/ovsinc/resources-rate-limits/resources-rate-limits"
-
-	fibermid "github.com/ovsinc/resources-rate-limits/resources-rate-limits/middlewares/fiber"
+	fibermid "github.com/ovsinc/resources-rate-limits/pkg/middlewares/fiber"
 
 	sysfiber "github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -38,19 +36,7 @@ func main() {
 	l := logrus.New()
 	l.SetLevel(logrus.DebugLevel)
 
-	r := rate.MustNew()
-	defer r.Shutdown()
-
-	cfg := &fibermid.Config{
-		Rate:         r,
-		LimitHandler: fibermid.DefaultFiberConfig.LimitHandler,
-		ErrHandler:   fibermid.DefaultFiberConfig.ErrHandler,
-		Skip:         fibermid.DefaultFiberConfig.Skip,
-		Config:       fibermid.DefaultFiberConfig.Config,
-		Logger:       l,
-	}
-	rl := fibermid.RateLimitWithConfig(cfg)
-	app.Use(rl)
+	app.Use(fibermid.RateLimitWithConfig(&fibermid.DefaultFiberConfig))
 
 	app.Get("/", func(c *sysfiber.Ctx) error {
 		return c.SendString("Hello tester!")

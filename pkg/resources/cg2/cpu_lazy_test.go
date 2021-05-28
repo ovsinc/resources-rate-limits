@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
+	resmoc "github.com/ovsinc/resources-rate-limits/pkg/resources/common/moc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/atomic"
@@ -93,14 +95,14 @@ func TestCPUCG2Lazy_Used_Moc(t *testing.T) {
 		ftotal:      newCPUBufferStatic([]byte(cpuTotalMax)),
 		fused:       newCPUBufferStatic([]byte(cpuStat)),
 		utilization: &atomic.Float64{},
-		tick:        time.NewTicker(500 * time.Millisecond),
+		dur:         500 * time.Millisecond,
 	}
 	defer cpu.Stop()
 
 	done := make(chan struct{})
 	defer close(done)
 
-	cpu.init(done)
+	cpu.init()
 
 	time.Sleep(2 * time.Second)
 
@@ -116,7 +118,15 @@ func TestNewCPULazy(t *testing.T) {
 	require.Nil(t, err)
 	defer f.Close()
 
-	mem, err := NewCPULazy(done, f, f, time.Millisecond)
+	cnf := &resmoc.ResourceConfigMoc{
+		Rtype: rescommon.ResourceType_CG2,
+		FF: map[string]io.ReadSeekCloser{
+			rescommon.CGroup2CPULimitPath: f,
+			rescommon.CGroup2CPUUsagePath: f,
+		},
+	}
+
+	mem, err := NewCPULazy(done, cnf, time.Millisecond)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second)

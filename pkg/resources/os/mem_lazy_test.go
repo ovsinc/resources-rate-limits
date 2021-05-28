@@ -117,7 +117,11 @@ func TestMemOSLazy_Used_Sys(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
-	mi, err := NewMemLazy(done, f, 10*time.Millisecond)
+	cnf := rescommon.NewResourceConfig(rescommon.ResourceType_OS, rescommon.RAMFilenameInfoProc)
+	require.Nil(t, cnf.Init())
+	defer cnf.Stop()
+
+	mi, err := NewMemLazy(done, cnf, 10*time.Millisecond)
 	assert.Nil(t, err)
 	defer mi.Stop()
 

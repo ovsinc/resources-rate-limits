@@ -2,6 +2,16 @@
 github.com/andybalholm/brotli
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/goccy/go-json v0.5.1
+## explicit
+github.com/goccy/go-json
+github.com/goccy/go-json/internal/encoder
+github.com/goccy/go-json/internal/encoder/vm
+github.com/goccy/go-json/internal/encoder/vm_escaped
+github.com/goccy/go-json/internal/encoder/vm_escaped_indent
+github.com/goccy/go-json/internal/encoder/vm_indent
+github.com/goccy/go-json/internal/errors
+github.com/goccy/go-json/internal/runtime
 # github.com/gofiber/fiber/v2 v2.9.0
 ## explicit
 github.com/gofiber/fiber/v2
@@ -17,7 +27,14 @@ github.com/gofiber/fiber/v2/utils
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/zlib
-# github.com/ovsinc/multilog v1.0.2
+# github.com/nicksnyder/go-i18n/v2 v2.1.2
+github.com/nicksnyder/go-i18n/v2/i18n
+github.com/nicksnyder/go-i18n/v2/internal
+github.com/nicksnyder/go-i18n/v2/internal/plural
+# github.com/ovsinc/errors v1.2.3-0.20210519143139-dbb75520f7bc
+## explicit
+github.com/ovsinc/errors
+# github.com/ovsinc/multilog v1.0.4
 ## explicit
 github.com/ovsinc/multilog
 github.com/ovsinc/multilog/common
@@ -44,5 +61,10 @@ go.uber.org/atomic
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+# golang.org/x/text v0.3.6
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 gopkg.in/yaml.v3

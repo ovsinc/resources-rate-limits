@@ -4,39 +4,61 @@ import (
 	"io"
 	"time"
 
+	"github.com/ovsinc/errors"
 	"github.com/ovsinc/resources-rate-limits/internal/utils"
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 
 	"go.uber.org/atomic"
 )
 
-var _ rescommon.Resourcer = (*CPUCG2Lazy)(nil)
-
 type CPUCG2Lazy struct {
-	ftotal io.ReadSeekCloser
-	fused  io.ReadSeekCloser
-
+	dur         time.Duration
+	ftotal      io.ReadSeekCloser
+	fused       io.ReadSeekCloser
 	utilization *atomic.Float64
 	tick        *time.Ticker
+	done        chan struct{}
 }
 
 func NewCPULazy(
 	done chan struct{},
-	ftotal, fused io.ReadSeekCloser,
+	conf rescommon.ResourceConfiger,
 	dur time.Duration,
-) (*CPUCG2Lazy, error) {
+) (rescommon.Resourcer, error) {
 	if dur <= 0 {
 		return nil, rescommon.ErrTickPeriodZero
 	}
 
+	if conf == nil {
+		return nil, rescommon.ErrNoResourceConfig
+	}
+
+	ftotal := conf.File(rescommon.CGroup2CPULimitPath)
+	if ftotal == nil {
+		return nil, rescommon.ErrNoResourceReadFile.
+			WithOptions(
+				errors.AppendContextInfo("ftotal", rescommon.CGroup2CPULimitPath),
+			)
+	}
+
+	fused := conf.File(rescommon.CGroup2CPUUsagePath)
+	if fused == nil {
+		return nil, rescommon.ErrNoResourceReadFile.
+			WithOptions(
+				errors.AppendContextInfo("fused", rescommon.CGroup2CPUUsagePath),
+			)
+	}
+
 	cpu := &CPUCG2Lazy{
+		dur:         dur,
+		done:        done,
 		ftotal:      ftotal,
 		fused:       fused,
 		utilization: &atomic.Float64{},
 		tick:        time.NewTicker(dur),
 	}
 
-	cpu.init(done)
+	cpu.init()
 
 	// подождем для стабилизации 2 tick-периода + немного еще
 	time.Sleep(2*dur + 100*time.Millisecond)
@@ -45,8 +67,7 @@ func NewCPULazy(
 }
 
 func (cg *CPUCG2Lazy) Stop() {
-	cg.ftotal.Close()
-	cg.fused.Close()
+	cg.tick.Stop()
 }
 
 func (cg *CPUCG2Lazy) Used() float64 {
@@ -57,16 +78,18 @@ func (cg *CPUCG2Lazy) info() (total uint64, used uint64, err error) {
 	return getCPUInfo(cg.ftotal, cg.fused)
 }
 
-func (cg *CPUCG2Lazy) init(done chan struct{}) {
+func (cg *CPUCG2Lazy) init() {
 	var (
 		lastused  uint64
 		lasttotal uint64
 	)
 
+	cg.tick = time.NewTicker(cg.dur)
+
 	go func() {
 		for {
 			select {
-			case <-done:
+			case <-cg.done:
 				return
 
 			case <-cg.tick.C:

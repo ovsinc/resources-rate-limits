@@ -65,12 +65,12 @@ var (
 			rlp.conf = conf
 		}
 	}
-	AppendCPUResourcer = func(res resources.Resourcer) Option {
+	AppendCPUResourcer = func(res resources.ResourceViewer) Option {
 		return func(rlp *resourceLimit) {
 			rlp.cpuRes = res
 		}
 	}
-	AppendRAMResourcer = func(res resources.Resourcer) Option {
+	AppendRAMResourcer = func(res resources.ResourceViewer) Option {
 		return func(rlp *resourceLimit) {
 			rlp.ramRes = res
 		}

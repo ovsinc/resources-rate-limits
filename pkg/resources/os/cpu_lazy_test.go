@@ -76,8 +76,12 @@ func TestNewCPULazy_Used_Sys(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
-	cpu, err := NewCPULazy(done, f, 1000*time.Millisecond)
-	assert.Nil(t, err)
+	cnf := rescommon.NewResourceConfig(rescommon.ResourceType_OS, rescommon.CPUfilenameInfoProc)
+	require.Nil(t, cnf.Init())
+	defer cnf.Stop()
+
+	cpu, err := NewCPULazy(done, cnf, 1000*time.Millisecond)
+	require.Nil(t, err)
 	defer cpu.Stop()
 
 	used := cpu.Used()

@@ -19,7 +19,11 @@ func BenchmarkMemOSLazy_Used_Sys(b *testing.B) {
 	done := make(chan struct{})
 	defer close(done)
 
-	mem, err := os.NewMemLazy(done, f, 10*time.Millisecond)
+	cnf := rescommon.NewResourceConfig(rescommon.ResourceType_OS, rescommon.RAMFilenameInfoProc)
+	require.Nil(b, cnf.Init())
+	defer cnf.Stop()
+
+	mem, err := os.NewMemLazy(done, cnf, 10*time.Millisecond)
 	require.Nil(b, err)
 	defer mem.Stop()
 
@@ -34,7 +38,7 @@ func BenchmarkMemOSLazy_Used_Sys(b *testing.B) {
 }
 
 func BenchmarkMemOSSimple_Used_Sys(b *testing.B) {
-	mem := os.NewMemSimple()
+	mem, _ := os.NewMemSimple()
 
 	u := mem.Used()
 	require.Greater(b, u, float64(0))

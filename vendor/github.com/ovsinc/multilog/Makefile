@@ -3,22 +3,22 @@ BUILD = `date +%FT%T%z`
 
 _CURDIR := `git rev-parse --show-toplevel 2>/dev/null | sed -e 's/(//'`
 
-PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null)
-
-EXAMPLE := ${_CURDIR}/_example
+PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null | grep -v mock)
 
 linter := golangci-lint
 
+test := go test -short -run=.
 
 
 .PHONY: all
-all: lint
+all: lint test
 
 .PHONY: build_all
 build_all: lint
 
 .PHONY: full_tests
 full_tests: go_lint_max go_performance unit_tests race msan ## Full tests
+
 
 .PHONY: go_security
 go_security: ## Check bugs
@@ -31,11 +31,6 @@ lint: go_lint go_performance go_security ## Full liner checks
 .PHONY: go_lint
 go_lint: ## Lint the files
 	@${linter} run
-
-.PHONY: go_mod
-go_mod: ## mod with proxy
-	@GOPROXY="https://proxy.golang.org" \
-	go mod download ${PKG_LIST}
 
 .PHONY: go_performance
 go_performance: ## Check performance
@@ -50,23 +45,35 @@ go_lint_max: ## Max lint checks the files
 go_style: ## check style of code
 	@${linter} run -p style
 
-.PHONY: unit_tests
-test: unit_tests ## Run unittests
-unit_tests: ## Run unittests
-	@go test -short ${PKG_LIST}
+
+.PHONY: test
+test: unit_test race msan ## Run all tests
+
+.PHONY: unit_test
+unit_test: ## Run unittests
+	@${test} ${PKG_LIST}
 
 .PHONY: race
 race: ## Run data race detector
-	@go test -race -short ${PKG_LIST}
+	@${test} -race ${PKG_LIST}
+
+.PHONY: msan
+msan: ## Run memory sanitizer
+	@CXX=clang++ CC=clang \
+	${test} -msan -short ${PKG_LIST}
+
 
 .PHONY: bench
 bench: ## Run benchmark tests
 	@go test -benchmem -bench=. -run=^$ ${PKG_LIST}
 
 
-.PHONY: msan
-msan: ## Run memory sanitizer
-	@go test -msan -short ${PKG_LIST}
+
+.PHONY: go_mod
+go_mod: ## mod with proxy
+	@GOPROXY="https://proxy.golang.org" \
+	go mod download ${PKG_LIST}
+
 
 .PHONY: coverage
 coverage: ## Generate global code coverage report
@@ -76,9 +83,11 @@ coverage: ## Generate global code coverage report
 coverhtml: ## Generate global code coverage report in HTML
 	[ -x /opt/tools/bin/coverage.sh ] && /opt/tools/bin/coverage.sh html || ${_CURDIR}/scripts/coverage.sh html;
 
+
 .PHONY: dep
 dep: ## Get the dependencies
 	@go mod vendor
+
 
 
 

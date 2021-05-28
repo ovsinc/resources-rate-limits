@@ -9,7 +9,7 @@ import (
 
 type MemCG1Simple struct{}
 
-func NewMemSimple() (*MemCG1Simple, error) {
+func NewMemSimple() (rescommon.ResourceViewer, error) {
 	return &MemCG1Simple{}, nil
 }
 

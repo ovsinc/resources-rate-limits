@@ -1,8 +1,9 @@
 package resourcesratelimits
 
 import (
-	"errors"
 	"time"
+
+	"github.com/ovsinc/errors"
 
 	"github.com/ovsinc/resources-rate-limits/pkg/resources"
 )
@@ -25,11 +26,10 @@ type RateReply struct {
 
 type Limiter interface {
 	Limit() *RateReply
-	Shutdown()
 }
 
 type resourceLimit struct {
-	cpuRes, ramRes resources.Resourcer
+	cpuRes, ramRes resources.ResourceViewer
 	conf           *RateLimitConfig
 }
 
@@ -109,13 +109,4 @@ func (rl *resourceLimit) Limit() *RateReply {
 	}
 
 	return repl
-}
-
-func (rl *resourceLimit) Shutdown() {
-	if rl.cpuRes != nil {
-		rl.cpuRes.Stop()
-	}
-	if rl.ramRes != nil {
-		rl.ramRes.Stop()
-	}
 }

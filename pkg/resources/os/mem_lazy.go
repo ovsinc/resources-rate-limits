@@ -4,32 +4,50 @@ import (
 	"io"
 	"time"
 
+	"github.com/ovsinc/errors"
 	"github.com/ovsinc/resources-rate-limits/internal/utils"
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 
 	"go.uber.org/atomic"
 )
 
-var _ rescommon.Resourcer = (*MemOSLazy)(nil)
-
 type MemOSLazy struct {
 	f    io.ReadSeekCloser
 	used *atomic.Float64
 	tick *time.Ticker
+	done chan struct{}
+	dur  time.Duration
 }
 
-func NewMemLazy(done chan struct{}, f io.ReadSeekCloser, dur time.Duration) (*MemOSLazy, error) {
+func NewMemLazy(
+	done chan struct{},
+	conf rescommon.ResourceConfiger,
+	dur time.Duration,
+) (rescommon.Resourcer, error) {
 	if dur <= 0 {
 		return nil, rescommon.ErrTickPeriodZero
 	}
 
-	mem := &MemOSLazy{
-		f:    f,
-		used: &atomic.Float64{},
-		tick: time.NewTicker(dur),
+	if conf == nil {
+		return nil, rescommon.ErrNoResourceConfig
 	}
 
-	mem.init(done)
+	f := conf.File(rescommon.RAMFilenameInfoProc)
+	if f == nil {
+		return nil, rescommon.ErrNoResourceReadFile.
+			WithOptions(
+				errors.AppendContextInfo("f", rescommon.RAMFilenameInfoProc),
+			)
+	}
+
+	mem := &MemOSLazy{
+		f:    f,
+		dur:  dur,
+		used: &atomic.Float64{},
+		done: done,
+	}
+
+	mem.init()
 
 	// подождем для стабилизации tick-период + немного еще
 	time.Sleep(dur + (100 * time.Millisecond))
@@ -42,7 +60,6 @@ func (mem *MemOSLazy) Used() float64 {
 }
 
 func (mem *MemOSLazy) Stop() {
-	mem.f.Close()
 	mem.tick.Stop()
 }
 
@@ -50,25 +67,22 @@ func (mem *MemOSLazy) info() (uint64, uint64, error) {
 	return getMemInfo(mem.f)
 }
 
-func (mem *MemOSLazy) init(done chan struct{}) error {
-	var errGlob atomic.Error
+func (mem *MemOSLazy) init() {
+	mem.tick = time.NewTicker(mem.dur)
 
 	go func() {
 		for {
 			select {
-			case <-done:
+			case <-mem.done:
 				return
 			case <-mem.tick.C:
 				total, used, err := mem.info()
 				if err != nil {
-					errGlob.Store(err)
-					return
+					mem.used.Store(0)
 				}
 
 				mem.used.Store(utils.Percent(float64(used), float64(total)))
 			}
 		}
 	}()
-
-	return errGlob.Load()
 }

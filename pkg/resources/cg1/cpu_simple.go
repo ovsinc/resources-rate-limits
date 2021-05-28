@@ -9,14 +9,12 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-var _ rescommon.Resourcer = (*CPUCG1Simple)(nil)
-
 type CPUCG1Simple struct {
 	mu                  *sync.Mutex
 	prevTotal, prevUsed uint64
 }
 
-func NewCPUSimple() (*CPUCG1Simple, error) {
+func NewCPUSimple() (rescommon.ResourceViewer, error) {
 	cpu := &CPUCG1Simple{
 		mu: new(sync.Mutex),
 	}

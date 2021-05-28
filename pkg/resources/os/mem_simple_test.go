@@ -20,9 +20,8 @@ func BenchmarkMemOSSimple_info(b *testing.B) {
 }
 
 func TestMemOSSimple_Used_Sys(t *testing.T) {
-	mi := NewMemSimple()
+	mi, _ := NewMemSimple()
 	require.NotNil(t, mi)
-	defer mi.Stop()
 
 	u := mi.Used()
 	assert.Greater(t, u, float64(0))
