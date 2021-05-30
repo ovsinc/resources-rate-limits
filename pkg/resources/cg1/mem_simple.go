@@ -44,7 +44,7 @@ func (mem *MemCG1Simple) Stop() {}
 func (mem *MemCG1Simple) Used() float64 {
 	total, used, err := mem.info()
 	if err != nil {
-		return 0
+		return rescommon.FailValue
 	}
 
 	return utils.Percent(float64(used), float64(total))

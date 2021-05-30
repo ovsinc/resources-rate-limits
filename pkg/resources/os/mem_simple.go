@@ -31,8 +31,14 @@ func (mem *MemOSSimple) info() (uint64, uint64, error) {
 func (mem *MemOSSimple) Used() float64 {
 	total, used, err := mem.info()
 	if err != nil {
-		return 0
+		rescommon.Debug("[MemOSSimple]<ERR> Check resource fails with %v", err)
+		return rescommon.FailValue
 	}
+
+	rescommon.Debug(
+		"[MemOSSimple]<INFO> now: %d/%d",
+		used, total,
+	)
 
 	return utils.Percent(float64(used), float64(total))
 }

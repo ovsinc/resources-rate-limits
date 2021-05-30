@@ -20,8 +20,7 @@ var _ Limiter = (*resourceLimit)(nil)
 type RateReply struct {
 	RAMUsed        float64
 	CPUUtilization float64
-	Time           *time.Time
-	Err            error
+	Time           time.Time
 }
 
 type Limiter interface {
@@ -30,7 +29,6 @@ type Limiter interface {
 
 type resourceLimit struct {
 	cpuRes, ramRes resources.ResourceViewer
-	conf           *RateLimitConfig
 }
 
 func New(ops ...Option) (Limiter, error) {
@@ -40,21 +38,11 @@ func New(ops ...Option) (Limiter, error) {
 		op(rlp)
 	}
 
-	// конфиг всегда должен быть
-	if rlp.conf == nil {
-		rlp.conf = DefaultRateLimitConfig
-	}
-
 	var err error
 
 	// если не задано н одного ресорсера, устанавливаем автоматически
 	if rlp.cpuRes == nil && rlp.ramRes == nil {
-		rlp.cpuRes, err = resources.AutoCPU()
-		if err != nil {
-			return nil, err
-		}
-
-		rlp.ramRes, err = resources.AutoRAM()
+		rlp.cpuRes, rlp.ramRes, err = NewSimple()
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +60,9 @@ func MustNew(ops ...Option) Limiter {
 }
 
 func (rl *resourceLimit) Limit() *RateReply {
-	repl := new(RateReply)
+	repl := &RateReply{
+		Time: time.Now(),
+	}
 
 	if rl.ramRes != nil {
 		repl.RAMUsed = rl.ramRes.Used()
@@ -80,32 +70,6 @@ func (rl *resourceLimit) Limit() *RateReply {
 
 	if rl.cpuRes != nil {
 		repl.CPUUtilization = rl.cpuRes.Used()
-	}
-
-	switch {
-	case repl.RAMUsed == 0.0:
-		repl.Err = ErrRAMUtilizationIsZero
-		if rl.conf.ErrorHandler != nil {
-			rl.conf.ErrorHandler(rl.conf, repl.Err)
-		}
-
-	case repl.CPUUtilization == 0.0:
-		if rl.conf.ErrorHandler != nil {
-			rl.conf.ErrorHandler(rl.conf, repl.Err)
-		}
-
-		repl.Err = ErrCPUUtilizationIsZero
-		now := time.Now()
-		repl.Time = &now
-
-	case repl.RAMUsed >= rl.conf.MemoryUsageBarrierPercentage,
-		repl.CPUUtilization >= rl.conf.CPUUtilizationBarrierPercentage:
-		if rl.conf.LimitHandler != nil {
-			rl.conf.LimitHandler(rl.conf)
-		}
-
-		now := time.Now()
-		repl.Time = &now
 	}
 
 	return repl

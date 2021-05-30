@@ -73,7 +73,7 @@ func (cg *CPUCG1Simple) Stop() {}
 func (cg *CPUCG1Simple) Used() float64 {
 	total, used, err := cg.info()
 	if err != nil {
-		return 0
+		return rescommon.FailValue
 	}
 
 	cg.mu.Lock()

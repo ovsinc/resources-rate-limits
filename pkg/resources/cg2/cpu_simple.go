@@ -9,14 +9,12 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-var _ rescommon.Resourcer = (*CPUCG2Simple)(nil)
-
 type CPUCG2Simple struct {
 	mu                  *sync.Mutex
 	prevTotal, prevUsed uint64
 }
 
-func NewCPUSimple() (*CPUCG2Simple, error) {
+func NewCPUSimple() (rescommon.ResourceViewer, error) {
 	cpu := &CPUCG2Simple{
 		mu: new(sync.Mutex),
 	}
@@ -60,12 +58,11 @@ func (cg *CPUCG2Simple) init() error {
 	return nil
 }
 
-func (cg *CPUCG2Simple) Stop() {}
-
 func (cg *CPUCG2Simple) Used() float64 {
 	total, used, err := cg.info()
 	if err != nil {
-		return 0
+		rescommon.Debug("[CPUCG2Simple]<ERR> Check resource fails with %v", err)
+		return rescommon.FailValue
 	}
 
 	cg.mu.Lock()
@@ -75,6 +72,11 @@ func (cg *CPUCG2Simple) Used() float64 {
 
 	cg.prevUsed = used
 	cg.prevTotal = total
+
+	rescommon.Debug(
+		"[CPUCG2Simple]<INFO> last: %d/%d now: %d/%d",
+		cg.prevUsed, cg.prevTotal, used, total,
+	)
 
 	return percent
 }

@@ -14,7 +14,6 @@ import (
 type MemOSLazy struct {
 	f    io.ReadSeekCloser
 	used *atomic.Float64
-	tick *time.Ticker
 	done chan struct{}
 	dur  time.Duration
 }
@@ -23,7 +22,7 @@ func NewMemLazy(
 	done chan struct{},
 	conf rescommon.ResourceConfiger,
 	dur time.Duration,
-) (rescommon.Resourcer, error) {
+) (rescommon.ResourceViewer, error) {
 	if dur <= 0 {
 		return nil, rescommon.ErrTickPeriodZero
 	}
@@ -59,29 +58,30 @@ func (mem *MemOSLazy) Used() float64 {
 	return mem.used.Load()
 }
 
-func (mem *MemOSLazy) Stop() {
-	mem.tick.Stop()
-}
-
 func (mem *MemOSLazy) info() (uint64, uint64, error) {
 	return getMemInfo(mem.f)
 }
 
 func (mem *MemOSLazy) init() {
-	mem.tick = time.NewTicker(mem.dur)
+	tick := time.NewTicker(mem.dur)
 
 	go func() {
 		for {
 			select {
 			case <-mem.done:
 				return
-			case <-mem.tick.C:
+			case <-tick.C:
 				total, used, err := mem.info()
 				if err != nil {
-					mem.used.Store(0)
+					rescommon.Debug("[MemOSLazy]<ERR> Check resource fails with %v", err)
+					mem.used.Store(rescommon.FailValue)
 				}
 
 				mem.used.Store(utils.Percent(float64(used), float64(total)))
+				rescommon.Debug(
+					"[MemOSLazy]<INFO> now: %d/%d",
+					used, total,
+				)
 			}
 		}
 	}()

@@ -25,7 +25,6 @@ func BenchmarkCPUOSLazy_Used_Sys(b *testing.B) {
 
 	cpu, err := os.NewCPULazy(done, cnf, 600*time.Millisecond)
 	require.Nil(b, err)
-	defer cpu.Stop()
 
 	u := cpu.Used()
 	require.Greater(b, u, float64(0))

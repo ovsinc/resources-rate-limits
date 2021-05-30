@@ -15,7 +15,6 @@ type CPUOSLazy struct {
 	dur         time.Duration
 	f           io.ReadSeekCloser
 	utilization *atomic.Float64
-	tick        *time.Ticker
 	done        chan struct{}
 }
 
@@ -23,7 +22,7 @@ func NewCPULazy(
 	done chan struct{},
 	conf rescommon.ResourceConfiger,
 	dur time.Duration,
-) (rescommon.Resourcer, error) {
+) (rescommon.ResourceViewer, error) {
 	if dur <= 0 {
 		return nil, rescommon.ErrTickPeriodZero
 	}
@@ -59,16 +58,12 @@ func (cpu *CPUOSLazy) Used() float64 {
 	return cpu.utilization.Load()
 }
 
-func (cpu *CPUOSLazy) Stop() {
-	cpu.tick.Stop()
-}
-
 func (cpu *CPUOSLazy) info() (total uint64, used uint64, err error) {
 	return getCPUInfo(cpu.f)
 }
 
 func (cpu *CPUOSLazy) init() {
-	cpu.tick = time.NewTicker(cpu.dur)
+	tick := time.NewTicker(cpu.dur)
 
 	var (
 		lastused  uint64
@@ -81,20 +76,29 @@ func (cpu *CPUOSLazy) init() {
 			case <-cpu.done:
 				return
 
-			case <-cpu.tick.C:
+			case <-tick.C:
 				total, used, err := cpu.info()
 				if err != nil {
-					cpu.utilization.Store(0)
+					rescommon.Debug("[CPUOSLazy]<ERR> Check resource fails with %v", err)
+					cpu.utilization.Store(rescommon.FailValue)
 				}
 
 				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
 				if lasttotal > 0 {
 					cpu.utilization.Store(utils.CPUPercent(lastused, used, lasttotal, total))
+					rescommon.Debug(
+						"[CPUOSLazy]<INFO> last: %d/%d now: %d/%d",
+						lastused, lasttotal, used, total,
+					)
 				}
 
 				lastused = used
 				lasttotal = total
 
+				rescommon.Debug(
+					"[CPUOSLazy]<INFO> First loop last: %d/%d",
+					lastused, lasttotal,
+				)
 			}
 		}
 	}()

@@ -33,7 +33,8 @@ func NewCPUSimple() (rescommon.ResourceViewer, error) {
 func (cpu *CPUOSSimple) Used() float64 {
 	total, used, err := cpu.info()
 	if err != nil {
-		return 0
+		rescommon.Debug("[CPUOSSimple]<ERR> Check resource fails with %v", err)
+		return rescommon.FailValue
 	}
 
 	cpu.mu.Lock()
@@ -43,6 +44,11 @@ func (cpu *CPUOSSimple) Used() float64 {
 
 	cpu.prevUsed = used
 	cpu.prevTotal = total
+
+	rescommon.Debug(
+		"[CPUOSSimple]<INFO> last: %d/%d now: %d/%d",
+		cpu.prevUsed, cpu.prevTotal, used, total,
+	)
 
 	return percent
 }

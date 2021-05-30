@@ -46,7 +46,7 @@ func Check() rescommon.ResourceConfiger {
 	return rescommon.NewResourceConfig(t, files...)
 }
 
-func AutoCPU() (ResourceViewer, error) {
+func AutoCPUSimple() (ResourceViewer, error) {
 	rt := Check()
 
 	var res ResourceViewer
@@ -64,7 +64,7 @@ func AutoCPU() (ResourceViewer, error) {
 	return res, nil
 }
 
-func AutoRAM() (ResourceViewer, error) {
+func AutoRAMSimple() (ResourceViewer, error) {
 	rt := Check()
 
 	var res ResourceViewer
@@ -82,15 +82,17 @@ func AutoRAM() (ResourceViewer, error) {
 	return res, nil
 }
 
-func LazyRAM(
-	done chan struct{}, conf rescommon.ResourceConfiger, dur time.Duration,
-) (res Resourcer, err error) {
-	switch conf.Type() {
+func AutoLazyRAM(
+	done chan struct{}, dur time.Duration,
+) (res ResourceViewer, err error) {
+	rt := Check()
+
+	switch rt.Type() {
 	case rescommon.ResourceType_OS:
-		res, err = os.NewMemLazy(done, conf, dur)
+		res, err = os.NewMemLazy(done, rt, dur)
 
 	case rescommon.ResourceType_CG2:
-		res, err = cg2.NewMemLazy(done, conf, dur)
+		res, err = cg2.NewMemLazy(done, rt, dur)
 
 	default:
 		return nil, rescommon.ErrNoResourcer
@@ -103,15 +105,17 @@ func LazyRAM(
 	return res, nil
 }
 
-func LazyCPU(
-	done chan struct{}, conf rescommon.ResourceConfiger, dur time.Duration,
-) (res Resourcer, err error) {
-	switch conf.Type() {
+func AutoLazyCPU(
+	done chan struct{}, dur time.Duration,
+) (res ResourceViewer, err error) {
+	rt := Check()
+
+	switch rt.Type() {
 	case rescommon.ResourceType_OS:
-		res, err = os.NewCPULazy(done, conf, dur)
+		res, err = os.NewCPULazy(done, rt, dur)
 
 	case rescommon.ResourceType_CG2:
-		res, err = cg2.NewCPULazy(done, conf, dur)
+		res, err = cg2.NewCPULazy(done, rt, dur)
 
 	default:
 		return nil, rescommon.ErrNoResourcer

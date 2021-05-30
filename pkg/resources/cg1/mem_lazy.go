@@ -1,4 +1,4 @@
-package cg2
+package cg1
 
 import (
 	"io"
@@ -12,7 +12,7 @@ import (
 	"go.uber.org/atomic"
 )
 
-type MemCG2Lazy struct {
+type MemCG1Lazy struct {
 	ftotal io.ReadSeekCloser
 	fused  io.ReadSeekCloser
 	used   *atomic.Float64
@@ -49,7 +49,7 @@ func NewMemLazy(
 			)
 	}
 
-	mem := &MemCG2Lazy{
+	mem := &MemCG1Lazy{
 		dur:    dur,
 		used:   &atomic.Float64{},
 		ftotal: ftotal,
@@ -65,15 +65,35 @@ func NewMemLazy(
 	return mem, nil
 }
 
-func (cg *MemCG2Lazy) Used() float64 {
+func (cg *MemCG1Lazy) Used() float64 {
 	return cg.used.Load()
 }
 
-func (cg *MemCG2Lazy) info() (uint64, uint64, error) {
-	return getMemInfo(cg.ftotal, cg.fused)
+func (cg *MemCG1Lazy) info() (total, used uint64, err error) {
+	_, err = cg.ftotal.Seek(0, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	_, err = cg.fused.Seek(0, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	total, err = readInfo(cg.ftotal)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	used, err = readInfo(cg.fused)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return total, used, nil
 }
 
-func (cg *MemCG2Lazy) init() {
+func (cg *MemCG1Lazy) init() {
 	tick := time.NewTicker(cg.dur)
 	go func() {
 		for {
@@ -84,13 +104,13 @@ func (cg *MemCG2Lazy) init() {
 				total, used, err := cg.info()
 				if err != nil {
 					cg.used.Store(rescommon.FailValue)
-					rescommon.Debug("[MemCG2Lazy]<ERR> Check resource fails with %v", err)
+					rescommon.Debug("[MemCG1Lazy]<ERR> Check resource fails with %v", err)
 					continue
 				}
 
 				cg.used.Store(utils.Percent(float64(used), float64(total)))
 				rescommon.Debug(
-					"[MemCG2Lazy]<INFO> now: %d/%d",
+					"[MemCG1Lazy]<INFO> now: %d/%d",
 					used, total,
 				)
 			}

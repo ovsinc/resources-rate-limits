@@ -1,104 +1,60 @@
 package fiber
 
 import (
-	"net/http"
-	"strconv"
-	"time"
-
-	"github.com/ovsinc/resources-rate-limits/pkg/middlewares"
-
-	rate "github.com/ovsinc/resources-rate-limits"
+	"errors"
 
 	sysfiber "github.com/gofiber/fiber/v2"
-
-	"github.com/ovsinc/multilog"
+	rate "github.com/ovsinc/resources-rate-limits"
 )
 
-const (
-	DefaultRetryAfter = "3"
+var (
+	ErrGetCPUUtilizationFail = errors.New("get CPU utilization fails")
+	ErrGetRAMUsedFail        = errors.New("get RAM used fails")
+	ErrResourcerNoResult     = errors.New("resourcer fails with no result")
 )
-
-type Config struct {
-	Rate         rate.Limiter
-	Config       *rate.RateLimitConfig
-	Logger       multilog.Logger
-	ErrHandler   func(*sysfiber.Ctx, *Config) error
-	LimitHandler func(*sysfiber.Ctx, *Config, time.Duration) error
-	Skip         func(*sysfiber.Ctx) bool
-}
-
-var DefaultFiberConfig = Config{
-	Config: rate.DefaultRateLimitConfig,
-	Skip:   nil,
-	// по-дефолту устанавливается *Simple ресорсер и дефолтный конфиг
-	Rate: rate.MustNew(),
-	// дефолтный ErrHandler установит заголовок "RetryAfter" = DefaultRetryAfter
-	ErrHandler: func(ctx *sysfiber.Ctx, _ *Config) error {
-		ctx.Response().Header.Add(middlewares.HeaderRetryAfter, DefaultRetryAfter)
-		return ctx.SendStatus(http.StatusTooManyRequests)
-	},
-	// дефолтный LimitHandler установит заголовок
-	// "RetryAfter" =  DefaultRetryAfter, если тротлинг (без задержек) или
-	// "RetryAfter" = двойное время выполнения *Rate.Limit(), если rate limit
-	LimitHandler: func(ctx *sysfiber.Ctx, conf *Config, workingTime time.Duration) error {
-		var wtrStr string = DefaultRetryAfter
-		wtr := workingTime.Round(time.Second)
-		if wtr > 1 {
-			wtrStr = strconv.Itoa(2 * int(wtr))
-		}
-		ctx.Response().Header.Add(middlewares.HeaderRetryAfter, wtrStr)
-		return ctx.SendStatus(http.StatusTooManyRequests)
-	},
-}
 
 // RateLimitWithConfig echo middleware with custom conf
-func RateLimitWithConfig(config *Config) sysfiber.Handler {
-	if config.Rate == nil {
-		config.Rate = rate.MustNew()
+func RateLimit(ops ...OptionFiber) sysfiber.Handler {
+	op := new(optionFiber)
+	for _, f := range ops {
+		f(op)
 	}
 
 	return func(c *sysfiber.Ctx) error {
-		if config.Skip != nil && config.Skip(c) {
+		if op.config.Skip != nil && op.config.Skip(c) {
 			return c.Next()
 		}
 
-		now := time.Now()
-
-		info := config.Rate.Limit()
+		info := op.limiter.Limit()
 
 		switch {
 		case info == nil:
-			if config.Logger != nil {
-				config.Logger.Errorf("Resource rate limitter fails with no result.")
-			}
-			return config.ErrHandler(c, config)
+			return op.config.ErrHandler(c, &op.config, ErrResourcerNoResult)
 
-		case info.Err != nil:
-			if config.Logger != nil {
-				config.Logger.Errorf("Resource rate limitter fails with err: '%v'.", info.Err)
-			}
-			return config.ErrHandler(c, config)
+		case info.CPUUtilization == rate.FailValue:
+			return op.config.ErrHandler(c, &op.config, ErrGetCPUUtilizationFail)
 
-		case info.Time != nil:
-			wait := info.Time.Sub(now)
+		case info.RAMUsed == rate.FailValue:
+			return op.config.ErrHandler(c, &op.config, ErrGetRAMUsedFail)
 
-			if config.Logger != nil {
-				config.Logger.Warnf(
-					"Request from '%v' with path '%v' is rate limited. The request was completed in %s.", c.IP(), c.Path(), wait.String(),
-				)
-				config.Logger.Infof(
+		case info.RAMUsed >= op.config.MemoryUsageBarrierPercentage,
+			info.CPUUtilization >= op.config.CPUUtilizationBarrierPercentage:
+			if op.config.Logger != nil {
+				op.config.Logger.Infof(
 					"Resource rate limite is reached. Memory - %.2f of %.2f, CPU - %.2f of %.2f.",
 					info.RAMUsed,
-					config.Config.MemoryUsageBarrierPercentage,
+					op.config.MemoryUsageBarrierPercentage,
 					info.CPUUtilization,
-					config.Config.CPUUtilizationBarrierPercentage,
+					op.config.CPUUtilizationBarrierPercentage,
 				)
 			}
-			return config.LimitHandler(c, config, wait)
+			if op.config.LimitHandler != nil {
+				return op.config.LimitHandler(c, &op.config, info.Time)
+			}
 		}
 
-		if config.Logger != nil {
-			config.Logger.Debugf(
+		if op.config.Logger != nil {
+			op.config.Logger.Debugf(
 				"Utilization percents: RAM - %.2f, CPU - %.2f.",
 				info.RAMUsed, info.CPUUtilization,
 			)

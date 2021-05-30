@@ -97,7 +97,6 @@ func TestCPUCG2Lazy_Used_Moc(t *testing.T) {
 		utilization: &atomic.Float64{},
 		dur:         500 * time.Millisecond,
 	}
-	defer cpu.Stop()
 
 	done := make(chan struct{})
 	defer close(done)

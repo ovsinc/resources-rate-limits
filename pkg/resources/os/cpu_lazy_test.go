@@ -82,7 +82,6 @@ func TestNewCPULazy_Used_Sys(t *testing.T) {
 
 	cpu, err := NewCPULazy(done, cnf, 1000*time.Millisecond)
 	require.Nil(t, err)
-	defer cpu.Stop()
 
 	used := cpu.Used()
 	assert.Greater(t, used, float64(0))

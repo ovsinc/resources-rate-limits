@@ -1,4 +1,4 @@
-package cg2
+package cg1
 
 import (
 	"io"
@@ -11,7 +11,7 @@ import (
 	"go.uber.org/atomic"
 )
 
-type CPUCG2Lazy struct {
+type CPUCG1Lazy struct {
 	dur         time.Duration
 	ftotal      io.ReadSeekCloser
 	fused       io.ReadSeekCloser
@@ -48,7 +48,7 @@ func NewCPULazy(
 			)
 	}
 
-	cpu := &CPUCG2Lazy{
+	cpu := &CPUCG1Lazy{
 		dur:         dur,
 		done:        done,
 		ftotal:      ftotal,
@@ -64,15 +64,35 @@ func NewCPULazy(
 	return cpu, nil
 }
 
-func (cg *CPUCG2Lazy) Used() float64 {
+func (cg *CPUCG1Lazy) Used() float64 {
 	return cg.utilization.Load()
 }
 
-func (cg *CPUCG2Lazy) info() (total uint64, used uint64, err error) {
-	return getCPUInfo(cg.ftotal, cg.fused)
+func (cg *CPUCG1Lazy) info() (total uint64, used uint64, err error) {
+	_, err = cg.ftotal.Seek(0, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	_, err = cg.fused.Seek(0, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	total, err = readInfo(cg.ftotal)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	used, err = readInfo(cg.fused)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return total, used, nil
 }
 
-func (cg *CPUCG2Lazy) init() {
+func (cg *CPUCG1Lazy) init() {
 	var (
 		lastused  uint64
 		lasttotal uint64
@@ -91,7 +111,7 @@ func (cg *CPUCG2Lazy) init() {
 				if err != nil {
 					// неявный признак ошибки
 					cg.utilization.Store(rescommon.FailValue)
-					rescommon.Debug("[CPUCG2Lazy]<ERR> Check resource fails with %v", err)
+					rescommon.Debug("[CPUCG1Lazy]<ERR> Check resource fails with %v", err)
 					continue
 				}
 
@@ -99,7 +119,7 @@ func (cg *CPUCG2Lazy) init() {
 				if lasttotal > 0 {
 					cg.utilization.Store(utils.CPUPercent(lastused, used, lasttotal, total))
 					rescommon.Debug(
-						"[CPUCG2Lazy]<INFO> last: %d/%d now: %d/%d",
+						"[CPUCG1Lazy]<INFO> last: %d/%d now: %d/%d",
 						lastused, lasttotal, used, total,
 					)
 				}
@@ -108,7 +128,7 @@ func (cg *CPUCG2Lazy) init() {
 				lasttotal = total
 
 				rescommon.Debug(
-					"[CPUCG2Lazy]<INFO> First loop last: %d/%d",
+					"[CPUCG1Lazy]<INFO> First loop last: %d/%d",
 					lastused, lasttotal,
 				)
 

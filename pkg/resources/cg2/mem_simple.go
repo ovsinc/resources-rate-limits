@@ -8,11 +8,9 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-var _ rescommon.Resourcer = (*MemCG2Simple)(nil)
-
 type MemCG2Simple struct{}
 
-func NewMemSimple() (*MemCG2Simple, error) {
+func NewMemSimple() (rescommon.ResourceViewer, error) {
 	return &MemCG2Simple{}, nil
 }
 
@@ -35,10 +33,14 @@ func (cg *MemCG2Simple) info() (uint64, uint64, error) {
 func (cg *MemCG2Simple) Used() float64 {
 	total, used, err := cg.info()
 	if err != nil {
-		return 0
+		rescommon.Debug("[MemCG2Simple]<ERR> Check resource fails with %v", err)
+		return rescommon.FailValue
 	}
+
+	rescommon.Debug(
+		"[MemCG2Simple]<INFO> now: %d/%d",
+		used, total,
+	)
 
 	return utils.Percent(float64(used), float64(total))
 }
-
-func (cg *MemCG2Simple) Stop() {}

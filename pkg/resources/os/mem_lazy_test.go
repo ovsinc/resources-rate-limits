@@ -123,7 +123,6 @@ func TestMemOSLazy_Used_Sys(t *testing.T) {
 
 	mi, err := NewMemLazy(done, cnf, 10*time.Millisecond)
 	assert.Nil(t, err)
-	defer mi.Stop()
 
 	u := mi.Used()
 	assert.Greater(t, u, float64(0))
