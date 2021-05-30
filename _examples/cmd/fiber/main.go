@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	ratelimits "github.com/ovsinc/resources-rate-limits"
 	fibermid "github.com/ovsinc/resources-rate-limits/pkg/middlewares/fiber"
 
 	sysfiber "github.com/gofiber/fiber/v2"
@@ -36,7 +37,21 @@ func main() {
 	l := logrus.New()
 	l.SetLevel(logrus.DebugLevel)
 
-	app.Use(fibermid.RateLimitWithConfig(&fibermid.DefaultFiberConfig))
+	done := make(chan struct{})
+	defer close(done)
+
+	cpu, ram, done := ratelimits.MustNewLazy()
+
+	app.Use(
+		fibermid.RateLimit(
+			fibermid.WithLimiter(
+				ratelimits.MustNew(
+					ratelimits.AppendCPUResourcer(cpu),
+					ratelimits.AppendCPUResourcer(ram),
+				),
+			),
+		),
+	)
 
 	app.Get("/", func(c *sysfiber.Ctx) error {
 		return c.SendString("Hello tester!")
@@ -54,13 +69,9 @@ func main() {
 		return c.SendStatus(http.StatusCreated)
 	})
 
-	done := make(chan struct{})
 	ch := make(chan cpuLoad)
 	go load(done, ch)
-	defer func() {
-		close(done)
-		close(ch)
-	}()
+	defer close(ch)
 
 	app.Get("/cpu/burn/:num/:percent/:time", func(c *sysfiber.Ctx) error {
 		num, _ := c.ParamsInt("num")

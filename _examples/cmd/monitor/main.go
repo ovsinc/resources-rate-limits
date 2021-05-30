@@ -4,18 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	resos "github.com/ovsinc/resources-rate-limits/pkg/resources/os"
-	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
-	"github.com/ovsinc/resources-rate-limits/pkg/resources"
+	ratelimits "github.com/ovsinc/resources-rate-limits"
 )
 
 func main() {
-	rescommon.
-	cpu, _ := resos.NewCPULazy()
-	defer cpu.Stop()
-
-	ram, _ := resos.AutoRAM()
-	defer ram.Stop()
+	cpu, ram, done := ratelimits.MustNewLazy()
+	defer close(done)
 
 	tick := time.NewTicker(500 * time.Millisecond)
 

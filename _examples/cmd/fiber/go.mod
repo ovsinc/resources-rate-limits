@@ -3,7 +3,11 @@ module example-fiber
 go 1.16
 
 require (
-	github.com/gofiber/fiber/v2 v2.9.0
-	github.com/ovsinc/resources-rate-limits v0.1.0
+	github.com/andybalholm/brotli v1.0.3 // indirect
+	github.com/gofiber/fiber/v2 v2.10.0
+	github.com/klauspost/compress v1.12.3 // indirect
+	github.com/ovsinc/resources-rate-limits v0.1.3
 	github.com/sirupsen/logrus v1.8.1
+	github.com/valyala/fasthttp v1.25.0 // indirect
+	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect
 )
