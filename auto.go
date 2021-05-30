@@ -1,7 +1,6 @@
-package resources
+package resourcesratelimits
 
 import (
-	pkgos "os"
 	"time"
 
 	"github.com/ovsinc/resources-rate-limits/pkg/resources/cg2"
@@ -14,43 +13,9 @@ type (
 	ResourceViewer rescommon.ResourceViewer
 )
 
-func check(files ...string) bool {
-	for _, file := range files {
-		if _, err := pkgos.Stat(file); err != nil {
-			return false
-		}
-	}
-	return true
-}
-
-func Check() rescommon.ResourceConfiger {
-	var (
-		files = []string{}
-		t     rescommon.ResourceType
-	)
-
-	switch {
-	case check(rescommon.CGroupCPULimitPath, rescommon.CGroupMemLimitPath):
-		t = rescommon.ResourceType_CG1
-		files = rescommon.CGroupFiles
-
-	case check(rescommon.CGroup2CPULimitPath, rescommon.CGroup2MemLimitPath):
-		t = rescommon.ResourceType_CG2
-		files = rescommon.CGroup2Files
-
-	case check(rescommon.CPUfilenameInfoProc, rescommon.RAMFilenameInfoProc):
-		t = rescommon.ResourceType_OS
-		files = rescommon.OSLinuxFiles
-	}
-
-	return rescommon.NewResourceConfig(t, files...)
-}
-
-func AutoCPUSimple() (ResourceViewer, error) {
-	rt := Check()
-
+func AutoCPUSimple(t rescommon.ResourceType) (ResourceViewer, error) {
 	var res ResourceViewer
-	switch rt.Type() {
+	switch t {
 	case rescommon.ResourceType_OS:
 		res, _ = os.NewCPUSimple()
 
@@ -64,11 +29,9 @@ func AutoCPUSimple() (ResourceViewer, error) {
 	return res, nil
 }
 
-func AutoRAMSimple() (ResourceViewer, error) {
-	rt := Check()
-
+func AutoRAMSimple(t rescommon.ResourceType) (ResourceViewer, error) {
 	var res ResourceViewer
-	switch rt.Type() {
+	switch t {
 	case rescommon.ResourceType_OS:
 		res, _ = os.NewCPUSimple()
 
@@ -83,10 +46,9 @@ func AutoRAMSimple() (ResourceViewer, error) {
 }
 
 func AutoLazyRAM(
+	rt rescommon.ResourceConfiger,
 	done chan struct{}, dur time.Duration,
 ) (res ResourceViewer, err error) {
-	rt := Check()
-
 	switch rt.Type() {
 	case rescommon.ResourceType_OS:
 		res, err = os.NewMemLazy(done, rt, dur)
@@ -106,10 +68,9 @@ func AutoLazyRAM(
 }
 
 func AutoLazyCPU(
+	rt rescommon.ResourceConfiger,
 	done chan struct{}, dur time.Duration,
 ) (res ResourceViewer, err error) {
-	rt := Check()
-
 	switch rt.Type() {
 	case rescommon.ResourceType_OS:
 		res, err = os.NewCPULazy(done, rt, dur)

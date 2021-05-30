@@ -36,6 +36,7 @@ func NewCPULazy(
 	if ftotal == nil {
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
+				errors.AppendOperations("cg2.NewCPULazy"),
 				errors.AppendContextInfo("ftotal", rescommon.CGroup2CPULimitPath),
 			)
 	}
@@ -44,6 +45,7 @@ func NewCPULazy(
 	if fused == nil {
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
+				errors.AppendOperations("cg2.NewCPULazy"),
 				errors.AppendContextInfo("fused", rescommon.CGroup2CPUUsagePath),
 			)
 	}
@@ -57,9 +59,6 @@ func NewCPULazy(
 	}
 
 	cpu.init()
-
-	// подождем для стабилизации 2 tick-периода + немного еще
-	time.Sleep(2*dur + 100*time.Millisecond)
 
 	return cpu, nil
 }

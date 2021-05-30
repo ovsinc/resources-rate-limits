@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/ovsinc/errors"
-
-	"github.com/ovsinc/resources-rate-limits/pkg/resources"
 )
 
 var (
@@ -28,7 +26,7 @@ type Limiter interface {
 }
 
 type resourceLimit struct {
-	cpuRes, ramRes resources.ResourceViewer
+	cpuRes, ramRes ResourceViewer
 }
 
 func New(ops ...Option) (Limiter, error) {

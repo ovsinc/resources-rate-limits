@@ -35,6 +35,7 @@ func NewCPULazy(
 	if f == nil {
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
+				errors.AppendOperations("os.NewCPULazy"),
 				errors.AppendContextInfo("f", rescommon.CPUfilenameInfoProc),
 			)
 	}
@@ -47,9 +48,6 @@ func NewCPULazy(
 	}
 
 	cpu.init()
-
-	// подождем для стабилизации 2 tick-периода + немного еще
-	time.Sleep(2*dur + 100*time.Millisecond)
 
 	return cpu, nil
 }

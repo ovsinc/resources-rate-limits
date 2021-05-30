@@ -35,6 +35,7 @@ func NewMemLazy(
 	if f == nil {
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
+				errors.AppendOperations("os.NewMemLazy"),
 				errors.AppendContextInfo("f", rescommon.RAMFilenameInfoProc),
 			)
 	}
@@ -47,9 +48,6 @@ func NewMemLazy(
 	}
 
 	mem.init()
-
-	// подождем для стабилизации tick-период + немного еще
-	time.Sleep(dur + (100 * time.Millisecond))
 
 	return mem, nil
 }

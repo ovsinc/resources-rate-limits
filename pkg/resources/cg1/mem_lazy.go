@@ -38,6 +38,7 @@ func NewMemLazy(
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
 				errors.AppendContextInfo("ftotal", rescommon.CGroup2MemLimitPath),
+				errors.AppendOperations("NewMemLazy"),
 			)
 	}
 
@@ -46,6 +47,7 @@ func NewMemLazy(
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
 				errors.AppendContextInfo("fused", rescommon.CGroup2MemUsagePath),
+				errors.AppendOperations("NewMemLazy"),
 			)
 	}
 
@@ -58,9 +60,6 @@ func NewMemLazy(
 	}
 
 	mem.init()
-
-	// подождем для стабилизации tick-период + немного еще
-	time.Sleep(dur + (100 * time.Millisecond))
 
 	return mem, nil
 }
