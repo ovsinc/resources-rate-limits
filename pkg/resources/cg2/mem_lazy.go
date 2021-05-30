@@ -83,15 +83,12 @@ func (cg *MemCG2Lazy) init() {
 				total, used, err := cg.info()
 				if err != nil {
 					cg.used.Store(rescommon.FailValue)
-					rescommon.Debug("[MemCG2Lazy]<ERR> Check resource fails with %v", err)
+					rescommon.DbgErrCommon("MemCG2Lazy", err)
 					continue
 				}
 
 				cg.used.Store(utils.Percent(float64(used), float64(total)))
-				rescommon.Debug(
-					"[MemCG2Lazy]<INFO> now: %d/%d",
-					used, total,
-				)
+				rescommon.DbgInfRAM("MemCG2Lazy", used, total)
 			}
 		}
 	}()

@@ -90,27 +90,20 @@ func (cg *CPUCG2Lazy) init() {
 				if err != nil {
 					// неявный признак ошибки
 					cg.utilization.Store(rescommon.FailValue)
-					rescommon.Debug("[CPUCG2Lazy]<ERR> Check resource fails with %v", err)
+					rescommon.DbgErrCommon("CPUCG2Lazy", err)
 					continue
 				}
 
 				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
 				if lasttotal > 0 {
 					cg.utilization.Store(utils.CPUPercent(lastused, used, lasttotal, total))
-					rescommon.Debug(
-						"[CPUCG2Lazy]<INFO> last: %d/%d now: %d/%d",
-						lastused, lasttotal, used, total,
-					)
+					rescommon.DbgInfCPU("CPUCG2Lazy", lastused, used, lasttotal, total)
 				}
 
 				lastused = used
 				lasttotal = total
 
-				rescommon.Debug(
-					"[CPUCG2Lazy]<INFO> First loop last: %d/%d",
-					lastused, lasttotal,
-				)
-
+				rescommon.DbgInfCPUFirst("CPUCG2Lazy", lastused, lasttotal)
 			}
 		}
 	}()

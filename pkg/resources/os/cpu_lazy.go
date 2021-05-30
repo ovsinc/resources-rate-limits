@@ -77,26 +77,20 @@ func (cpu *CPUOSLazy) init() {
 			case <-tick.C:
 				total, used, err := cpu.info()
 				if err != nil {
-					rescommon.Debug("[CPUOSLazy]<ERR> Check resource fails with %v", err)
+					rescommon.DbgErrCommon("CPUOSLazy", err)
 					cpu.utilization.Store(rescommon.FailValue)
 				}
 
 				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
 				if lasttotal > 0 {
 					cpu.utilization.Store(utils.CPUPercent(lastused, used, lasttotal, total))
-					rescommon.Debug(
-						"[CPUOSLazy]<INFO> last: %d/%d now: %d/%d",
-						lastused, lasttotal, used, total,
-					)
+					rescommon.DbgInfCPU("CPUOSLazy", lastused, used, lasttotal, total)
 				}
 
 				lastused = used
 				lasttotal = total
 
-				rescommon.Debug(
-					"[CPUOSLazy]<INFO> First loop last: %d/%d",
-					lastused, lasttotal,
-				)
+				rescommon.DbgInfCPUFirst("CPUOSLazy", lastused, lasttotal)
 			}
 		}
 	}()

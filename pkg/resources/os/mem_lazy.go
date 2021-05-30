@@ -71,15 +71,12 @@ func (mem *MemOSLazy) init() {
 			case <-tick.C:
 				total, used, err := mem.info()
 				if err != nil {
-					rescommon.Debug("[MemOSLazy]<ERR> Check resource fails with %v", err)
+					rescommon.DbgErrCommon("MemOSLazy", err)
 					mem.used.Store(rescommon.FailValue)
 				}
 
 				mem.used.Store(utils.Percent(float64(used), float64(total)))
-				rescommon.Debug(
-					"[MemOSLazy]<INFO> now: %d/%d",
-					used, total,
-				)
+				rescommon.DbgInfRAM("MemOSLazy", used, total)
 			}
 		}
 	}()
