@@ -1,13 +1,19 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/ovsinc/multilog/golog"
 
 	ratelimits "github.com/ovsinc/resources-rate-limits"
+	"github.com/ovsinc/resources-rate-limits/pkg/middlewares"
 	fibermid "github.com/ovsinc/resources-rate-limits/pkg/middlewares/fiber"
 
 	sysfiber "github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
+	fiblogger "github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 var memo []byte = make([]byte, 0)
@@ -34,16 +40,25 @@ func load(done chan struct{}, lch chan cpuLoad) {
 func main() {
 	app := sysfiber.New()
 
-	l := logrus.New()
-	l.SetLevel(logrus.DebugLevel)
-
-	done := make(chan struct{})
+	cpu, ram, done := ratelimits.MustNewLazy()
 	defer close(done)
 
-	cpu, ram, done := ratelimits.MustNewLazy()
+	time.Sleep(6 * time.Second)
+
+	app.Use(fiblogger.New())
 
 	app.Use(
 		fibermid.RateLimit(
+			fibermid.WithConfig(
+				fibermid.Config{
+					CommonConfig: middlewares.CommonConfig{
+						Logger: golog.New(
+							log.New(os.Stderr, "rate/fiber", log.LstdFlags),
+						),
+						Debug: true,
+					},
+				},
+			),
 			fibermid.WithLimiter(
 				ratelimits.MustNew(
 					ratelimits.AppendCPUResourcer(cpu),

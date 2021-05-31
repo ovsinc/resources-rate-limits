@@ -9,5 +9,6 @@ require (
 	github.com/ovsinc/errors v1.2.3
 	github.com/ovsinc/multilog v1.0.4
 	github.com/stretchr/testify v1.7.0
+	github.com/valyala/fasthttp v1.23.0
 	go.uber.org/atomic v1.7.0
 )
