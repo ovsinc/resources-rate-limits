@@ -86,9 +86,9 @@ func (cg *MemCG2Lazy) init() {
 					rescommon.DbgErrCommon("MemCG2Lazy", err)
 					continue
 				}
-
-				cg.used.Store(utils.Percent(float64(used), float64(total)))
-				rescommon.DbgInfRAM("MemCG2Lazy", used, total)
+				p := utils.Percent(float64(used), float64(total))
+				cg.used.Store(p)
+				rescommon.DbgInfRAM("MemCG2Lazy", used, total, p)
 			}
 		}
 	}()

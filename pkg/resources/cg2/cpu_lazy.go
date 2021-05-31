@@ -96,14 +96,13 @@ func (cg *CPUCG2Lazy) init() {
 
 				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
 				if lasttotal > 0 {
-					cg.utilization.Store(utils.CPUPercent(lastused, used, lasttotal, total))
-					rescommon.DbgInfCPU("CPUCG2Lazy", lastused, used, lasttotal, total)
+					p := utils.CPUPercent(lastused, used, lasttotal, total)
+					cg.utilization.Store(p)
+					rescommon.DbgInfCPU("CPUCG2Lazy", lastused, used, lasttotal, total, p)
 				}
 
 				lastused = used
 				lasttotal = total
-
-				rescommon.DbgInfCPUFirst("CPUCG2Lazy", lastused, lasttotal)
 			}
 		}
 	}()

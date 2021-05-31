@@ -74,9 +74,9 @@ func (mem *MemOSLazy) init() {
 					rescommon.DbgErrCommon("MemOSLazy", err)
 					mem.used.Store(rescommon.FailValue)
 				}
-
-				mem.used.Store(utils.Percent(float64(used), float64(total)))
-				rescommon.DbgInfRAM("MemOSLazy", used, total)
+				p := utils.Percent(float64(used), float64(total))
+				mem.used.Store(p)
+				rescommon.DbgInfRAM("MemOSLazy", used, total, p)
 			}
 		}
 	}()

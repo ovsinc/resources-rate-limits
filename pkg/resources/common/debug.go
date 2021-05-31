@@ -19,24 +19,19 @@ func Debug(format string, arg ...interface{}) {
 }
 
 const (
-	FmtErr          = "[%s]<ERR> check resource fails with %v"
-	FmtCPUInfo      = "[%s]<INFO> last: %d/%d now: %d/%d"
-	FmtCPUFirstInfo = "[%s]<INFO> first loop last: %d/%d"
-	FmtRAMInfo      = "[%s]<INFO> now: %d/%d"
+	FmtErr     = "[%s]<ERR> check resource fails with %v"
+	FmtCPUInfo = "[%s]<INFO> last: %d/%d now: %d/%d (%.2f%%)"
+	FmtRAMInfo = "[%s]<INFO> now: %d/%d (%.2f%%)"
 )
 
 func DbgErrCommon(method string, err error) {
 	Debug(FmtErr, method, err)
 }
 
-func DbgInfCPU(method string, lastused, used, lasttotal, total uint64) {
-	Debug(FmtCPUInfo, method, lastused, lasttotal, used, total)
+func DbgInfCPU(method string, lastused, used, lasttotal, total uint64, percents float64) {
+	Debug(FmtCPUInfo, method, lastused, lasttotal, used, total, percents)
 }
 
-func DbgInfRAM(method string, used, total uint64) {
-	Debug(FmtRAMInfo, method, used, total)
-}
-
-func DbgInfCPUFirst(method string, lastused, lasttotal uint64) {
-	Debug(FmtCPUFirstInfo, method, lastused, lasttotal)
+func DbgInfRAM(method string, used, total uint64, percents float64) {
+	Debug(FmtRAMInfo, method, used, total, percents)
 }

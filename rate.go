@@ -75,12 +75,9 @@ func (rl *resourceLimit) Limit() *RateReply {
 }
 
 func (rl *resourceLimit) With(ops ...Option) Limiter {
-	var newrl *resourceLimit
-	*newrl = *rl
-
+	newrl := *rl
 	for _, op := range ops {
-		op(newrl)
+		op(&newrl)
 	}
-
-	return newrl
+	return &newrl
 }

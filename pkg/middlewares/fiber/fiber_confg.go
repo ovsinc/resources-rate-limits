@@ -22,6 +22,8 @@ type Config struct {
 }
 
 var DefaultConfig = Config{
+	CommonConfig: middlewares.DefaultCommonConfig,
+
 	// ErrHandler установит заголовок "RetryAfter" = DefaultRetryAfter
 	ErrHandler: func(ctx *sysfiber.Ctx, conf *Config, err error) error {
 		middlewares.ErrorThrottleHandler(
@@ -51,10 +53,10 @@ var DefaultConfig = Config{
 
 		var wtrStr string = middlewares.DefaultRetryAfter
 		wtr := time.Since(now).Round(time.Second)
-		if wtr > 1 {
-			wtrStr = strconv.Itoa(2 * int(wtr))
+		if wtr > time.Second {
+			wtrStr = strconv.Itoa(2 * int(wtr.Seconds()))
 		}
-		c.Response().Header.Add(middlewares.HeaderRetryAfter, wtrStr)
+		c.Response().Header.Set(middlewares.HeaderRetryAfter, wtrStr)
 
 		return c.SendStatus(http.StatusTooManyRequests)
 	},

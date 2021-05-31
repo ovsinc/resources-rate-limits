@@ -83,14 +83,13 @@ func (cpu *CPUOSLazy) init() {
 
 				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
 				if lasttotal > 0 {
-					cpu.utilization.Store(utils.CPUPercent(lastused, used, lasttotal, total))
-					rescommon.DbgInfCPU("CPUOSLazy", lastused, used, lasttotal, total)
+					p := utils.CPUPercent(lastused, used, lasttotal, total)
+					cpu.utilization.Store(p)
+					rescommon.DbgInfCPU("CPUOSLazy", lastused, used, lasttotal, total, p)
 				}
 
 				lastused = used
 				lasttotal = total
-
-				rescommon.DbgInfCPUFirst("CPUOSLazy", lastused, lasttotal)
 			}
 		}
 	}()

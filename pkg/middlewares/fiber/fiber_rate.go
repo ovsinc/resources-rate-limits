@@ -64,10 +64,12 @@ func RateLimit(ops ...OptionFiber) sysfiber.Handler {
 		}
 
 		if op.config.Logger != nil {
-			op.config.Logger.Debugf(
-				"Utilization percents: RAM - %.2f, CPU - %.2f.",
-				info.RAMUsed, info.CPUUtilization,
-			)
+			if op.config.Debug {
+				op.config.Logger.Debugf(
+					"Utilization percents: RAM - %.2f, CPU - %.2f.",
+					info.RAMUsed, info.CPUUtilization,
+				)
+			}
 		}
 
 		return c.Next()
