@@ -125,10 +125,10 @@ func getLogger(l ...multilog.Logger) multilog.Logger {
 
 // LOG-хелперы
 
-// AppendWithLog как и Append создаст или дополнит цепочку ошибок err с помощью errs,
+// CombineWithLog как и Combine создаст или дополнит цепочку ошибок err с помощью errs,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func AppendWithLog(errs ...error) error {
-	e := Append(errs...)
+func CombineWithLog(errs ...error) error {
+	e := Combine(errs...)
 	Log(e)
 	return e
 }

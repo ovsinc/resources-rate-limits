@@ -1,6 +1,9 @@
 package errors
 
-import "bytes"
+import (
+	"bytes"
+	origerrors "errors"
+)
 
 // GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет "".
 func GetErrorType(err error) string {
@@ -119,4 +122,22 @@ func Contains(err error, id string) bool {
 	_, ok := findByID(err, []byte(id))
 
 	return ok
+}
+
+// Is сообщает, соответствует ли ошибка err target-ошибке.
+// Для multierr будет производится поиск в цепочке.
+func Is(err, target error) bool {
+	if err == nil {
+		return target == nil
+	}
+	return origerrors.Is(err, target)
+}
+
+// As обнаруживает ошибку err, соответствующую типу target и устанавливает target в найденное значение.
+func As(err error, target interface{}) bool {
+	return origerrors.As(err, target)
+}
+
+func Unwrap(err error) error {
+	return origerrors.Unwrap(err)
 }

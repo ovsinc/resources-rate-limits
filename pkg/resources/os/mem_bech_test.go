@@ -23,8 +23,10 @@ func BenchmarkMemOSLazy_Used_Sys(b *testing.B) {
 	require.Nil(b, cnf.Init())
 	defer cnf.Stop()
 
-	mem, err := os.NewMemLazy(done, cnf, 10*time.Millisecond)
+	mem, err := os.NewMemLazy(done, cnf, 100*time.Millisecond)
 	require.Nil(b, err)
+
+	time.Sleep(250 * time.Millisecond)
 
 	u := mem.Used()
 	require.Greater(b, u, float64(0))

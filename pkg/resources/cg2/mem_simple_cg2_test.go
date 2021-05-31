@@ -9,11 +9,12 @@ import (
 	"github.com/ovsinc/resources-rate-limits/pkg/resources/cg2"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCG2MemCG2Simple_Used(t *testing.T) {
 	mem, err := cg2.NewMemSimple()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	u := mem.Used()
 	assert.Greater(t, u, float64(0))

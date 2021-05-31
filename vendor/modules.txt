@@ -41,7 +41,7 @@ github.com/mattn/go-isatty
 github.com/nicksnyder/go-i18n/v2/i18n
 github.com/nicksnyder/go-i18n/v2/internal
 github.com/nicksnyder/go-i18n/v2/internal/plural
-# github.com/ovsinc/errors v1.2.3-0.20210519143139-dbb75520f7bc
+# github.com/ovsinc/errors v1.2.3
 ## explicit
 github.com/ovsinc/errors
 # github.com/ovsinc/multilog v1.0.4

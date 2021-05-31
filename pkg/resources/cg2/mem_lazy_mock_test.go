@@ -7,12 +7,11 @@ import (
 
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 	resmoc "github.com/ovsinc/resources-rate-limits/pkg/resources/common/moc"
-
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/atomic"
 )
 
-func TestNewMemLazy(t *testing.T) {
+func TestNewMemLazy_mock(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 

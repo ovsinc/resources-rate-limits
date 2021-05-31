@@ -152,9 +152,9 @@ func fromSlice(errors []error) error {
 	return &multiError{errors: nonNilErrs, count: len(nonNilErrs)}
 }
 
-// Append создаст цепочку ошибок из ошибок ...errors.
+// Combine создаст цепочку ошибок из ошибок ...errors.
 // Допускается использование `nil` в аргументах.
-func Append(errors ...error) error {
+func Combine(errors ...error) error {
 	return fromSlice(errors)
 }
 
@@ -168,4 +168,30 @@ func Wrap(left error, right error) error {
 		return left
 	}
 	return fromSlice([]error{left, right})
+}
+
+func (merr *multiError) Unwrap() error {
+	if merr.count < 1 || merr.curIdx > merr.count {
+		return nil
+	}
+
+	err := merr.errors[merr.curIdx]
+	merr.curIdx++
+
+	return err
+}
+
+func (merr *multiError) As(target interface{}) bool {
+	if x, ok := target.(*Multierror); ok { //nolint:errorlint
+		*x = merr
+		return true
+	}
+	return false
+}
+
+func (merr *multiError) Is(target error) bool {
+	if x, ok := target.(Multierror); ok { //nolint:errorlint
+		return x == merr
+	}
+	return false
 }

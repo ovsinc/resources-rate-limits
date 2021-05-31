@@ -2,7 +2,6 @@ package cg2
 
 import (
 	"io"
-	"os"
 	"testing"
 	"time"
 
@@ -113,19 +112,16 @@ func TestNewCPULazy(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
-	f, err := os.Open("/proc/cpuinfo")
-	require.Nil(t, err)
-	defer f.Close()
-
 	cnf := &resmoc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG2,
 		FF: map[string]io.ReadSeekCloser{
-			rescommon.CGroup2CPULimitPath: f,
-			rescommon.CGroup2CPUUsagePath: f,
+			rescommon.CGroup2CPULimitPath: newCPUBufferStatic([]byte(cpuTotalMax)),
+			rescommon.CGroup2CPUUsagePath: newCPUBufferStatic([]byte(cpuStat)),
 		},
 	}
+	assert.Nil(t, cnf.Init())
 
-	mem, err := NewCPULazy(done, cnf, time.Millisecond)
+	mem, err := NewCPULazy(done, cnf, 100*time.Millisecond)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second)

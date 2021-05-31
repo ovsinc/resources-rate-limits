@@ -28,6 +28,7 @@ func Test_resourceConfig_Type(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			rc := &resourceConfig{
 				rtype: tt.fields.rtype,
@@ -51,6 +52,6 @@ func Test_resourceConfig_Init(t *testing.T) {
 	assert.NotNil(t, cnf2)
 	defer cnf2.Stop()
 
-	assert.Nil(t, cnf2.Init())
+	assert.NotNil(t, cnf2.Init())
 	assert.Nil(t, cnf2.File("/proc/cpuinfo"))
 }

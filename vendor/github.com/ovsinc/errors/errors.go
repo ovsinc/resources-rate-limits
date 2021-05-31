@@ -258,3 +258,28 @@ func (e *Error) ErrorOrNil() error {
 func (e *Error) Log(l ...multilog.Logger) {
 	customlog(getLogger(l...), e, e.Severity())
 }
+
+func (e *Error) Is(target error) bool {
+	switch x := target.(type) { //nolint:errorlint
+	case *Error:
+		return e == x
+	}
+
+	return false
+}
+
+func (e *Error) As(target interface{}) bool {
+	switch x := target.(type) { //nolint:errorlint
+	case **Error:
+		*x = e
+
+	default:
+		return false
+	}
+
+	return true
+}
+
+func (e *Error) Unwrap() error {
+	return nil
+}

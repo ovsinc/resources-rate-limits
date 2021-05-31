@@ -47,6 +47,24 @@ func SetSeverity(severity Severity) Options {
 	}
 }
 
+func SetSeverityWarn() Options {
+	return func(e *Error) {
+		if e == nil {
+			return
+		}
+		e.severity = SeverityWarn
+	}
+}
+
+func SetSeverityErr() Options {
+	return func(e *Error) {
+		if e == nil {
+			return
+		}
+		e.severity = SeverityError
+	}
+}
+
 // ID
 
 // SetID установит ID ошибки.

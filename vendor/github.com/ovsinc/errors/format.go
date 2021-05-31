@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strconv"
 )
 
 var (
@@ -15,7 +16,7 @@ var (
 
 	_multilinePrefix    = []byte("the following errors occurred:") //nolint:gochecknoglobals
 	_multilineSeparator = []byte("\n")                             //nolint:gochecknoglobals
-	_multilineIndent    = []byte("* ")                             //nolint:gochecknoglobals
+	_multilineIndent    = []byte("\t#")                            //nolint:gochecknoglobals
 	_msgSeparator       = []byte(" -- ")                           //nolint:gochecknoglobals
 )
 
@@ -93,11 +94,13 @@ func StringMultierrFormatFunc(w io.Writer, es []error) {
 	_, _ = w.Write(_multilinePrefix)
 	_, _ = w.Write(_multilineSeparator)
 
-	for _, err := range es {
+	for i, err := range es {
 		if err == nil {
 			continue
 		}
 		_, _ = w.Write(_multilineIndent)
+		_, _ = io.WriteString(w, strconv.Itoa(i))
+		_, _ = io.WriteString(w, " ")
 		_, _ = io.WriteString(w, err.Error())
 		_, _ = w.Write(_multilineSeparator)
 	}
