@@ -23,6 +23,7 @@ type RateReply struct {
 
 type Limiter interface {
 	Limit() *RateReply
+	With(ops ...Option) Limiter
 }
 
 type resourceLimit struct {
@@ -71,4 +72,15 @@ func (rl *resourceLimit) Limit() *RateReply {
 	}
 
 	return repl
+}
+
+func (rl *resourceLimit) With(ops ...Option) Limiter {
+	var newrl *resourceLimit
+	*newrl = *rl
+
+	for _, op := range ops {
+		op(newrl)
+	}
+
+	return newrl
 }

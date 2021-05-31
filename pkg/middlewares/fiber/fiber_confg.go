@@ -10,11 +10,6 @@ import (
 	"github.com/ovsinc/resources-rate-limits/pkg/middlewares"
 )
 
-const (
-	DefaultRetryAfter = "3"
-	DefaultWaiting    = 3 * time.Second
-)
-
 type Config struct {
 	middlewares.CommonConfig
 
@@ -29,40 +24,43 @@ type Config struct {
 var DefaultConfig = Config{
 	// ErrHandler установит заголовок "RetryAfter" = DefaultRetryAfter
 	ErrHandler: func(ctx *sysfiber.Ctx, conf *Config, err error) error {
-		if conf.Logger != nil {
-			conf.Logger.Errorf(err.Error())
-		}
-
-		ctx.Response().Header.Add(middlewares.HeaderRetryAfter, DefaultRetryAfter)
+		middlewares.ErrorThrottleHandler(
+			conf.Logger,
+			middlewares.Client{
+				IP:   ctx.IP(),
+				Path: ctx.Path(),
+			},
+			err,
+			time.Now(),
+		)
+		ctx.Response().Header.Add(middlewares.HeaderRetryAfter, middlewares.DefaultRetryAfter)
 		return ctx.SendStatus(http.StatusTooManyRequests)
 	},
 
 	// LimitHandler выполнит замедление запроса на DefaultWaiting
 	// и установит заголовок "RetryAfter" = двойное время выполнения *Rate.Limit()
-	LimitHandler: func(c *sysfiber.Ctx, conf *Config, t time.Time) error {
-		// limit request
-		time.Sleep(DefaultWaiting)
+	LimitHandler: func(c *sysfiber.Ctx, conf *Config, now time.Time) error {
+		middlewares.LimitHandler(
+			conf.Logger,
+			middlewares.Client{
+				IP:   c.IP(),
+				Path: c.Path(),
+			},
+			now,
+		)
 
-		workingTime := time.Since(t)
-
-		var wtrStr string = DefaultRetryAfter
-		wtr := workingTime.Round(time.Second)
+		var wtrStr string = middlewares.DefaultRetryAfter
+		wtr := time.Since(now).Round(time.Second)
 		if wtr > 1 {
 			wtrStr = strconv.Itoa(2 * int(wtr))
 		}
 		c.Response().Header.Add(middlewares.HeaderRetryAfter, wtrStr)
 
-		if conf.Logger != nil {
-			conf.Logger.Warnf(
-				"Request from '%v' with path '%v' is rate limited. The request was completed in %s.", c.IP(), c.Path(), workingTime.String(),
-			)
-		}
-
 		return c.SendStatus(http.StatusTooManyRequests)
 	},
 }
 
-func defaultRate(limiter rate.Limiter) rate.Limiter {
+func defaultLimiter(limiter rate.Limiter) rate.Limiter {
 	if limiter == nil {
 		return rate.MustNew()
 	}
@@ -102,12 +100,12 @@ type OptionFiber func(*optionFiber)
 var (
 	WithLimiter = func(limiter rate.Limiter) OptionFiber {
 		return func(o *optionFiber) {
-			o.limiter = defaultRate(limiter)
+			o.limiter = limiter
 		}
 	}
 	WithConfig = func(config Config) OptionFiber {
 		return func(o *optionFiber) {
-			o.config = defaultConfig(config)
+			o.config = config
 		}
 	}
 )

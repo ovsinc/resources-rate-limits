@@ -20,6 +20,16 @@ func RateLimit(ops ...OptionFiber) sysfiber.Handler {
 		f(op)
 	}
 
+	// установим дефолтные значения, если они не были заданы
+	op.config = defaultConfig(op.config)
+	op.limiter = defaultLimiter(op.limiter)
+	// настроим дебаг
+	if op.config.Debug {
+		op.limiter = op.limiter.With(
+			rate.SetDebug(op.config.Debug),
+		)
+	}
+
 	return func(c *sysfiber.Ctx) error {
 		if op.config.Skip != nil && op.config.Skip(c) {
 			return c.Next()
