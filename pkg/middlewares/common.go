@@ -71,6 +71,8 @@ func ErrorThrottleHandler(logger multilog.Logger, c Client, err error, now time.
 }
 
 func ErrorLimitHandler(logger multilog.Logger, c Client, err error, now time.Time) {
+	// limit request
+	time.Sleep(DefaultWaiting)
 	if logger != nil {
 		logger.Errorf(
 			"Limited. Error. Request from '%v' with path '%v' was fails with '%v'. The request was completed in %s.",
