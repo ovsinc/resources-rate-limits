@@ -61,8 +61,8 @@ func main() {
 			),
 			fibermid.WithLimiter(
 				ratelimits.MustNew(
-					ratelimits.AppendCPUResourcer(cpu),
-					ratelimits.AppendCPUResourcer(ram),
+					ratelimits.SetCPUResourcer(cpu),
+					ratelimits.SetCPUResourcer(ram),
 				),
 			),
 		),

@@ -69,8 +69,8 @@ func TestRateLimitWithConfigLimited(t *testing.T) {
 		),
 		middlfiber.WithLimiter(
 			rate.MustNew(
-				rate.AppendCPUResourcer(cpu),
-				rate.AppendCPUResourcer(ram),
+				rate.SetCPUResourcer(cpu),
+				rate.SetCPUResourcer(ram),
 			),
 		),
 	)

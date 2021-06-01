@@ -15,12 +15,12 @@ const (
 type Option func(*resourceLimit)
 
 var (
-	AppendCPUResourcer = func(res ResourceViewer) Option {
+	SetCPUResourcer = func(res ResourceViewer) Option {
 		return func(rlp *resourceLimit) {
 			rlp.cpuRes = res
 		}
 	}
-	AppendRAMResourcer = func(res ResourceViewer) Option {
+	SetRAMResourcer = func(res ResourceViewer) Option {
 		return func(rlp *resourceLimit) {
 			rlp.ramRes = res
 		}

@@ -19,8 +19,8 @@ func BenchmarkFiberWithMiddleware(b *testing.B) {
 	limCfg := middlfiber.RateLimit(
 		middlfiber.WithLimiter(
 			rate.MustNew(
-				rate.AppendCPUResourcer(cpu),
-				rate.AppendCPUResourcer(ram),
+				rate.SetCPUResourcer(cpu),
+				rate.SetCPUResourcer(ram),
 			),
 		),
 	)
