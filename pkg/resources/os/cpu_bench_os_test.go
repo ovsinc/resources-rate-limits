@@ -1,4 +1,6 @@
-package os_test
+// +build os
+
+package os
 
 import (
 	stdos "os"
@@ -6,7 +8,7 @@ import (
 	"time"
 
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
-	"github.com/ovsinc/resources-rate-limits/pkg/resources/os"
+	"go.uber.org/atomic"
 
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +25,7 @@ func BenchmarkCPUOSLazy_Used_Sys(b *testing.B) {
 	require.Nil(b, cnf.Init())
 	defer cnf.Stop()
 
-	cpu, err := os.NewCPULazy(done, cnf, 600*time.Millisecond)
+	cpu, err := NewCPULazy(done, cnf, 600*time.Millisecond)
 	require.Nil(b, err)
 
 	time.Sleep(1300 * time.Millisecond)
@@ -38,9 +40,35 @@ func BenchmarkCPUOSLazy_Used_Sys(b *testing.B) {
 	}
 }
 
-func BenchmarkCPUOSSimple_Used_Sys(b *testing.B) {
-	cpu, err := os.NewCPUSimple()
+func BenchmarkCPUOSLazy_info_Sys(b *testing.B) {
+	f, err := stdos.Open(rescommon.CPUfilenameInfoProc)
 	require.Nil(b, err)
+	defer f.Close()
+
+	done := make(chan struct{})
+	defer close(done)
+
+	cpu := &CPUOSLazy{
+		f:           f,
+		utilization: &atomic.Float64{},
+		done:        done,
+		dur:         500 * time.Millisecond,
+	}
+
+	_, _, err = cpu.info()
+	require.Nil(b, err)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = cpu.info()
+	}
+}
+
+func BenchmarkCPUOSSimple_Used_Sys(b *testing.B) {
+	cpu, err := NewCPUSimple()
+	require.Nil(b, err)
+
+	time.Sleep(2 * time.Second)
 
 	u := cpu.Used()
 	require.Greater(b, u, float64(0))
@@ -49,5 +77,17 @@ func BenchmarkCPUOSSimple_Used_Sys(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = cpu.Used()
+	}
+}
+
+func BenchmarkMemOSSimple_info_Sys(b *testing.B) {
+	mi := &MemOSSimple{}
+
+	_, _, err := mi.info()
+	require.Nil(b, err)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = mi.info()
 	}
 }

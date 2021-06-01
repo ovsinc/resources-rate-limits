@@ -24,8 +24,6 @@ func BenchmarkMemCG1Lazy_Used_moc(b *testing.B) {
 	}
 	mem.init()
 
-	time.Sleep(300 * time.Millisecond)
-
 	u := mem.Used()
 	require.Equal(b, u, 2.8125)
 
@@ -129,6 +127,75 @@ func TestMemCG1Lazy_info_moc(t *testing.T) {
 	}
 }
 
+func TestMemCG1Lazy_Used(t *testing.T) {
+	done := make(chan struct{})
+	memDone := &MemCG1Lazy{
+		ftotal: newMocStatic([]byte("")),
+		fused:  newMocStatic([]byte("")),
+		used:   &atomic.Float64{},
+		dur:    500 * time.Millisecond,
+		done:   done,
+	}
+	memDone.init()
+	close(done)
+
+	memOk := &MemCG1Lazy{
+		ftotal: newMocStatic([]byte(MemTotal)),
+		fused:  newMocStatic([]byte(MemUsed)),
+		used:   &atomic.Float64{},
+		dur:    500 * time.Millisecond,
+	}
+	memOk.init()
+
+	memFail := &MemCG1Lazy{
+		ftotal: newMocStatic([]byte("")),
+		fused:  newMocStatic([]byte("")),
+		used:   &atomic.Float64{},
+		dur:    10 * time.Millisecond,
+	}
+	memFail.init()
+
+	time.Sleep(10 * time.Millisecond)
+
+	type fields struct {
+		mem *MemCG1Lazy
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   float64
+	}{
+		{
+			name: "ok",
+			fields: fields{
+				mem: memOk,
+			},
+			want: 2.8125,
+		},
+		{
+			name: "fail",
+			fields: fields{
+				mem: memFail,
+			},
+			want: float64(-1),
+		},
+		{
+			name: "done",
+			fields: fields{
+				mem: memDone,
+			},
+			want: float64(-2),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.fields.mem.Used(); got != tt.want {
+				t.Errorf("MemCG1Lazy.Used() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestMemCG1Lazy_Used_moc(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
@@ -141,8 +208,6 @@ func TestMemCG1Lazy_Used_moc(t *testing.T) {
 		done:   done,
 	}
 	mem.init()
-
-	time.Sleep(300 * time.Millisecond)
 
 	u := mem.Used()
 	assert.Equal(t, u, 2.8125)

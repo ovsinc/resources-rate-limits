@@ -82,6 +82,25 @@ func (cg *CPUCG2Lazy) info() (total uint64, used uint64, err error) {
 func (cg *CPUCG2Lazy) init() {
 	tick := time.NewTicker(cg.dur)
 
+	store := func() {
+		total, used, err := cg.info()
+		if err != nil {
+			// неявный признак ошибки
+			cg.utilization.Store(rescommon.FailValue)
+			rescommon.DbgErrCommon("CPUCG2Lazy", err)
+			return
+		}
+
+		var p float64
+		if used > 0 {
+			p = utils.Percent(float64(used)/1000, float64(total))
+		}
+		cg.utilization.Store(p)
+		rescommon.DbgInfCPU("CPUCG2Lazy", 0, used, 0, total, p)
+	}
+
+	store()
+
 	go func() {
 		for {
 			select {
@@ -90,20 +109,7 @@ func (cg *CPUCG2Lazy) init() {
 				return
 
 			case <-tick.C:
-				total, used, err := cg.info()
-				if err != nil {
-					// неявный признак ошибки
-					cg.utilization.Store(rescommon.FailValue)
-					rescommon.DbgErrCommon("CPUCG2Lazy", err)
-					continue
-				}
-
-				var p float64
-				if used > 0 {
-					p = utils.Percent(float64(used)/1000, float64(total))
-				}
-				cg.utilization.Store(p)
-				rescommon.DbgInfCPU("CPUCG2Lazy", 0, used, 0, total, p)
+				store()
 			}
 		}
 	}()

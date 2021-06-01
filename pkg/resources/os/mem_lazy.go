@@ -60,6 +60,21 @@ func (mem *MemOSLazy) info() (uint64, uint64, error) {
 }
 
 func (mem *MemOSLazy) init() {
+	store := func() {
+		total, used, err := mem.info()
+		if err != nil {
+			rescommon.DbgErrCommon("MemOSLazy", err)
+			mem.used.Store(rescommon.FailValue)
+			return
+		}
+
+		p := utils.Percent(float64(used), float64(total))
+		mem.used.Store(p)
+		rescommon.DbgInfRAM("MemOSLazy", used, total, p)
+	}
+
+	store()
+
 	tick := time.NewTicker(mem.dur)
 
 	go func() {
@@ -70,15 +85,7 @@ func (mem *MemOSLazy) init() {
 				return
 
 			case <-tick.C:
-				total, used, err := mem.info()
-				if err != nil {
-					rescommon.DbgErrCommon("MemOSLazy", err)
-					mem.used.Store(rescommon.FailValue)
-				}
-
-				p := utils.Percent(float64(used), float64(total))
-				mem.used.Store(p)
-				rescommon.DbgInfRAM("MemOSLazy", used, total, p)
+				store()
 			}
 		}
 	}()

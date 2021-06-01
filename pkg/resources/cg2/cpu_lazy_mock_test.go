@@ -25,8 +25,6 @@ func BenchmarkCPUCG2Lazy_Used_moc(b *testing.B) {
 
 	cpu.init()
 
-	time.Sleep(300 * time.Millisecond)
-
 	u := cpu.Used()
 	require.Equal(b, u, 0.031585)
 
@@ -50,8 +48,6 @@ func BenchmarkCPUCG2Lazy_info_moc(b *testing.B) {
 
 	cpu.init()
 
-	time.Sleep(300 * time.Millisecond)
-
 	total, used, err := cpu.info()
 	require.Nil(b, err)
 	require.Equal(b, total, uint64(100000))
@@ -65,7 +61,7 @@ func BenchmarkCPUCG2Lazy_info_moc(b *testing.B) {
 
 //
 
-func TestCPUCG2Lazy_info_mock(t *testing.T) {
+func TestCPUCG2Lazy_info_moc(t *testing.T) {
 	type fields struct {
 		ftotal rescommon.ReadSeekCloser
 		fused  rescommon.ReadSeekCloser
@@ -125,44 +121,105 @@ func TestCPUCG2Lazy_info_mock(t *testing.T) {
 	}
 }
 
-func TestCPUCG2Lazy_Used_Moc(t *testing.T) {
+func TestCPUCG2Lazy_Used_moc(t *testing.T) {
 	done := make(chan struct{})
-	defer close(done)
-
-	cpu := &CPUCG2Lazy{
+	cpuDone := &CPUCG2Lazy{
 		ftotal:      newCPUBufferStatic([]byte(cpuTotalMax)),
 		fused:       newCPUBufferStatic([]byte(cpuStat)),
 		utilization: &atomic.Float64{},
 		dur:         100 * time.Millisecond,
 		done:        done,
 	}
+	cpuDone.init()
+	close(done)
 
-	cpu.init()
+	cpuOk := &CPUCG2Lazy{
+		ftotal:      newCPUBufferStatic([]byte(cpuTotalMax)),
+		fused:       newCPUBufferStatic([]byte(cpuStat)),
+		utilization: &atomic.Float64{},
+		dur:         10 * time.Millisecond,
+	}
+	cpuOk.init()
 
-	time.Sleep(300 * time.Millisecond)
+	cpuFail := &CPUCG2Lazy{
+		ftotal:      newCPUBufferStatic([]byte("")),
+		fused:       newCPUBufferStatic([]byte("")),
+		utilization: &atomic.Float64{},
+		dur:         10 * time.Millisecond,
+	}
+	cpuFail.init()
 
-	u := cpu.Used()
-	assert.Equal(t, u, 0.031585)
+	time.Sleep(15 * time.Millisecond)
+
+	type fields struct {
+		cpu *CPUCG2Lazy
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   float64
+	}{
+		{
+			name: "ok",
+			fields: fields{
+				cpu: cpuOk,
+			},
+			want: 0.031585,
+		},
+		{
+			name: "fail",
+			fields: fields{
+				cpu: cpuFail,
+			},
+			want: -1.0,
+		},
+		{
+			name: "done",
+			fields: fields{
+				cpu: cpuDone,
+			},
+			want: -2.0,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.fields.cpu.Used(); got != tt.want {
+				t.Errorf("CPUCG2Lazy.Used() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 func TestNewCPULazy(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
-	cnf := &resmoc.ResourceConfigMoc{
+	cnf := resmoc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG2,
 		FF: map[string]rescommon.ReadSeekCloser{
 			rescommon.CGroup2CPULimitPath: newCPUBufferStatic([]byte(cpuTotalMax)),
 			rescommon.CGroup2CPUUsagePath: newCPUBufferStatic([]byte(cpuStat)),
 		},
 	}
-	assert.Nil(t, cnf.Init())
 
-	mem, err := NewCPULazy(done, cnf, 100*time.Millisecond)
+	mem, err := NewCPULazy(done, &cnf, 100*time.Millisecond)
 	assert.Nil(t, err)
-
-	time.Sleep(300 * time.Millisecond)
 
 	u := mem.Used()
 	assert.Equal(t, u, 0.031585)
+
+	_, err = NewCPULazy(done, nil, 100*time.Millisecond)
+	assert.Error(t, err, rescommon.ErrNoResourceConfig)
+
+	_, err = NewCPULazy(done, &cnf, 0)
+	assert.Error(t, err, rescommon.ErrTickPeriodZero)
+
+	cnf = resmoc.ResourceConfigMoc{
+		Rtype: rescommon.ResourceType_CG2,
+		FF:    map[string]rescommon.ReadSeekCloser{},
+	}
+
+	_, err = NewCPULazy(done, &cnf, 100*time.Millisecond)
+	assert.NotNil(t, err)
 }

@@ -140,9 +140,15 @@ func TestCPUCG1Lazy_info_moc(t *testing.T) {
 
 func TestCPUCG1Lazy_Used_Moc(t *testing.T) {
 	done := make(chan struct{})
-	defer close(done)
-
-	// cpuOK
+	cpuDone := &CPUCG1Lazy{
+		ftotal:      newMocStatic([]byte("")),
+		fused:       newMocStatic([]byte("")),
+		utilization: &atomic.Float64{},
+		dur:         500 * time.Millisecond,
+		done:        done,
+	}
+	cpuDone.init()
+	close(done)
 
 	cpuOk := &CPUCG1Lazy{
 		ftotal:      newMocStatic([]byte(CPUtotal)),
@@ -156,13 +162,11 @@ func TestCPUCG1Lazy_Used_Moc(t *testing.T) {
 		ftotal:      newMocStatic([]byte("")),
 		fused:       newMocStatic([]byte("")),
 		utilization: &atomic.Float64{},
-		dur:         500 * time.Millisecond,
+		dur:         10 * time.Millisecond,
 	}
 	cpuFail.init()
 
-	// wait
-
-	time.Sleep(2 * time.Second)
+	time.Sleep(10 * time.Millisecond)
 
 	type fields struct {
 		cpu *CPUCG1Lazy
@@ -185,6 +189,13 @@ func TestCPUCG1Lazy_Used_Moc(t *testing.T) {
 				cpu: cpuFail,
 			},
 			want: float64(-1),
+		},
+		{
+			name: "done",
+			fields: fields{
+				cpu: cpuDone,
+			},
+			want: float64(-2),
 		},
 	}
 	for _, tt := range tests {
@@ -224,8 +235,6 @@ func TestNewCPULazy_Moc(t *testing.T) {
 	assert.Nil(t, cnf.Init())
 
 	cpu, err := NewCPULazy(done, &cnf, 500*time.Millisecond)
-
-	time.Sleep(time.Second)
 
 	assert.Nil(t, err)
 	assert.Equal(t, cpu.Used(), 0.053704441000000006)

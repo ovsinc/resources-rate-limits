@@ -96,6 +96,22 @@ func (cg *MemCG2Lazy) info() (uint64, uint64, error) {
 
 func (cg *MemCG2Lazy) init() {
 	tick := time.NewTicker(cg.dur)
+
+	store := func() {
+		total, used, err := cg.info()
+		if err != nil {
+			cg.used.Store(rescommon.FailValue)
+			rescommon.DbgErrCommon("MemCG2Lazy", err)
+			return
+		}
+
+		p := utils.Percent(float64(used), float64(total))
+		cg.used.Store(p)
+		rescommon.DbgInfRAM("MemCG2Lazy", used, total, p)
+	}
+
+	store()
+
 	go func() {
 		for {
 			select {
@@ -104,15 +120,7 @@ func (cg *MemCG2Lazy) init() {
 				return
 
 			case <-tick.C:
-				total, used, err := cg.info()
-				if err != nil {
-					cg.used.Store(rescommon.FailValue)
-					rescommon.DbgErrCommon("MemCG2Lazy", err)
-					continue
-				}
-				p := utils.Percent(float64(used), float64(total))
-				cg.used.Store(p)
-				rescommon.DbgInfRAM("MemCG2Lazy", used, total, p)
+				store()
 			}
 		}
 	}()

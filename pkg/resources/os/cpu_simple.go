@@ -3,7 +3,6 @@ package os
 import (
 	"os"
 	"sync"
-	"time"
 
 	"github.com/ovsinc/resources-rate-limits/internal/utils"
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
@@ -23,9 +22,6 @@ func NewCPUSimple() (rescommon.ResourceViewer, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// подождем немного для стабилизации
-	time.Sleep(rescommon.CPUSleep)
 
 	return cpu, nil
 }

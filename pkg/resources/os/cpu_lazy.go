@@ -60,12 +60,33 @@ func (cpu *CPUOSLazy) info() (total uint64, used uint64, err error) {
 }
 
 func (cpu *CPUOSLazy) init() {
-	tick := time.NewTicker(cpu.dur)
-
 	var (
 		lastused  uint64
 		lasttotal uint64
 	)
+
+	store := func() {
+		total, used, err := cpu.info()
+		if err != nil {
+			rescommon.DbgErrCommon("CPUOSLazy", err)
+			cpu.utilization.Store(rescommon.FailValue)
+			return
+		}
+
+		// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
+		if lasttotal > 0 {
+			p := utils.CPUPercent(lastused, used, lasttotal, total)
+			cpu.utilization.Store(p)
+			rescommon.DbgInfCPU("CPUOSLazy", lastused, used, lasttotal, total, p)
+		}
+
+		lastused = used
+		lasttotal = total
+	}
+
+	store()
+
+	tick := time.NewTicker(cpu.dur)
 
 	go func() {
 		for {
@@ -75,21 +96,7 @@ func (cpu *CPUOSLazy) init() {
 				return
 
 			case <-tick.C:
-				total, used, err := cpu.info()
-				if err != nil {
-					rescommon.DbgErrCommon("CPUOSLazy", err)
-					cpu.utilization.Store(rescommon.FailValue)
-				}
-
-				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
-				if lasttotal > 0 {
-					p := utils.CPUPercent(lastused, used, lasttotal, total)
-					cpu.utilization.Store(p)
-					rescommon.DbgInfCPU("CPUOSLazy", lastused, used, lasttotal, total, p)
-				}
-
-				lastused = used
-				lasttotal = total
+				store()
 			}
 		}
 	}()

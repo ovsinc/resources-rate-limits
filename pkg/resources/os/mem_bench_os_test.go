@@ -1,3 +1,5 @@
+// +build os
+
 package os_test
 
 import (
