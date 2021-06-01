@@ -10,7 +10,7 @@ linter := golangci-lint
 
 mockery := mockery
 
-test := go test -short -run=^Example
+test := go test
 
 
 .PHONY: all
