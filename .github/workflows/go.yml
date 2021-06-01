@@ -37,7 +37,6 @@ jobs:
           run: |
             go test -mod=vendor -v -race $(go list ./... | grep -v vendor | grep -v internal | grep -v internal/build)
             CXX=clang++ CC=clang go test -mod=vendor -v -msan $(go list ./... | grep -v vendor | grep -v internal | grep -v internal/build)
-            go test -mod=vendor -tags $(./build/check) $(go list ./... | grep -v vendor | grep -v internal | grep -v internal/build)
         - uses: actions/cache@v2
           with:
             path: |

@@ -1,16 +1,9 @@
 package fiber
 
 import (
-	"errors"
-
 	sysfiber "github.com/gofiber/fiber/v2"
 	rate "github.com/ovsinc/resources-rate-limits"
-)
-
-var (
-	ErrGetCPUUtilizationFail = errors.New("get CPU utilization fails")
-	ErrGetRAMUsedFail        = errors.New("get RAM used fails")
-	ErrResourcerNoResult     = errors.New("resourcer fails with no result")
+	"github.com/ovsinc/resources-rate-limits/pkg/middlewares"
 )
 
 // RateLimitWithConfig echo middleware with custom conf
@@ -39,13 +32,16 @@ func RateLimit(ops ...OptionFiber) sysfiber.Handler {
 
 		switch {
 		case info == nil:
-			return op.config.ErrHandler(c, &op.config, ErrResourcerNoResult)
+			return op.config.ErrHandler(c, &op.config, middlewares.ErrResourcerNoResult)
 
 		case info.CPUUtilization == rate.FailValue:
-			return op.config.ErrHandler(c, &op.config, ErrGetCPUUtilizationFail)
+			return op.config.ErrHandler(c, &op.config, middlewares.ErrGetCPUUtilizationFail)
+
+		case info.CPUUtilization == rate.DoneValue || info.RAMUsed == rate.DoneValue:
+			return op.config.ErrHandler(c, &op.config, middlewares.ErrClosedResourcer)
 
 		case info.RAMUsed == rate.FailValue:
-			return op.config.ErrHandler(c, &op.config, ErrGetRAMUsedFail)
+			return op.config.ErrHandler(c, &op.config, middlewares.ErrGetRAMUsedFail)
 
 		case info.RAMUsed >= op.config.MemoryUsageBarrierPercentage,
 			info.CPUUtilization >= op.config.CPUUtilizationBarrierPercentage:

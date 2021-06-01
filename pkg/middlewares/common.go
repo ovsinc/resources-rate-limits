@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"errors"
 	"time"
 
 	"github.com/ovsinc/multilog"
@@ -15,6 +16,13 @@ const (
 const (
 	DefaultRetryAfter = "3"
 	DefaultWaiting    = 3 * time.Second
+)
+
+var (
+	ErrGetCPUUtilizationFail = errors.New("get CPU utilization fails")
+	ErrGetRAMUsedFail        = errors.New("get RAM used fails")
+	ErrClosedResourcer       = errors.New("the resourcer is closed")
+	ErrResourcerNoResult     = errors.New("resourcer fails with no result")
 )
 
 type CommonConfig struct {

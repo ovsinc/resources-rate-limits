@@ -10,6 +10,7 @@ const (
 	DefaultMemoryUsageBarrierPercentage    = 80.0
 	DefaultCPUUtilizationBarrierPercentage = 80.0
 	FailValue                              = rescommon.FailValue
+	DoneValue                              = rescommon.DoneValue
 )
 
 type Option func(*resourceLimit)
