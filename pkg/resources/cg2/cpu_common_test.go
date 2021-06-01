@@ -66,6 +66,60 @@ const (
 `
 	memUsedData1 = `1482752
 `
+	meminfo = `MemTotal:       32338608 kB
+MemFree:        21588516 kB
+MemAvailable:   25582292 kB
+Buffers:          320640 kB
+Cached:          5661316 kB
+SwapCached:            0 kB
+Active:          2476796 kB
+Inactive:        6881216 kB
+Active(anon):     616280 kB
+Inactive(anon):  4544412 kB
+Active(file):    1860516 kB
+Inactive(file):  2336804 kB
+Unevictable:      748392 kB
+Mlocked:              96 kB
+SwapTotal:       6291452 kB
+SwapFree:        6291452 kB
+Dirty:               600 kB
+Writeback:             0 kB
+AnonPages:       4120840 kB
+Mapped:          1081472 kB
+Shmem:           1788240 kB
+KReclaimable:     264592 kB
+Slab:             418556 kB
+SReclaimable:     264592 kB
+SUnreclaim:       153964 kB
+KernelStack:       26224 kB
+PageTables:        79148 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    22460756 kB
+Committed_AS:   28656504 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       63400 kB
+VmallocChunk:          0 kB
+Percpu:            11904 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:      465144 kB
+DirectMap2M:    14721024 kB
+DirectMap1G:    17825792 kB
+`
 )
 
 type memMocStatic struct {

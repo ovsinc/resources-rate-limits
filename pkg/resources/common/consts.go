@@ -21,7 +21,7 @@ const (
 	CGroupMemUsagePath = "/sys/fs/cgroup/memory/memory.usage_in_bytes"
 
 	CGroupCPULimitPath = "/sys/fs/cgroup/cpu/cpu.cfs_quota_us"
-	CGroupCPUUsagePath = "/sys/fs/cgroup/cpu/cpuacct.stat"
+	CGroupCPUUsagePath = "/sys/fs/cgroup/cpu/cpuacct.usage"
 
 	CPUSleep = time.Second
 

@@ -72,7 +72,7 @@ var (
 	ErrNoMemInfoFile  = errors.New("not /proc/meminfo file")
 )
 
-func getMemInfo(f io.ReadSeeker) (uint64, uint64, error) {
+func GetMemInfo(f io.ReadSeeker) (uint64, uint64, error) {
 	_, err := f.Seek(0, 0)
 	if err != nil {
 		return 0, 0, err

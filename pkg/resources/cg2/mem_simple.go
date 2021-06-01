@@ -27,20 +27,24 @@ func (cg *MemCG2Simple) info() (uint64, uint64, error) {
 	}
 	defer fused.Close()
 
-	return getMemInfo(ftotal, fused)
+	fprocmem, err := os.Open(rescommon.RAMFilenameInfoProc)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer fprocmem.Close()
+
+	return getMemInfo(ftotal, fused, fprocmem)
 }
 
 func (cg *MemCG2Simple) Used() float64 {
 	total, used, err := cg.info()
 	if err != nil {
-		rescommon.Debug("[MemCG2Simple]<ERR> Check resource fails with %v", err)
+		rescommon.DbgErrCommon("MemCG2Simple", err)
 		return rescommon.FailValue
 	}
 
-	rescommon.Debug(
-		"[MemCG2Simple]<INFO> now: %d/%d",
-		used, total,
-	)
+	p := utils.Percent(float64(used), float64(total))
+	rescommon.DbgInfRAM("MemCG2Simple", used, total, p)
 
-	return utils.Percent(float64(used), float64(total))
+	return p
 }

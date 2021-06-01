@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	CGroupFiles = []string{
+	CGroup1Files = []string{
 		CGroupCPULimitPath,
 		CGroupMemLimitPath,
 		CGroupCPUUsagePath,
@@ -31,6 +31,7 @@ var (
 		CGroup2MemLimitPath,
 		CGroup2CPUUsagePath,
 		CGroup2MemUsagePath,
+		RAMFilenameInfoProc,
 	}
 
 	OSLinuxFiles = []string{

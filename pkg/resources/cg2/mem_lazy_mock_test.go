@@ -17,12 +17,14 @@ func TestNewMemLazy_mock(t *testing.T) {
 
 	ftotal := newMemBufferStatic([]byte(memTotalData1))
 	fused := newMemBufferStatic([]byte(memUsedData1))
+	fprocmem := newMemBufferStatic([]byte(meminfo))
 
 	cnf := &resmoc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG2,
 		FF: map[string]io.ReadSeekCloser{
 			rescommon.CGroup2MemLimitPath: ftotal,
 			rescommon.CGroup2MemUsagePath: fused,
+			rescommon.RAMFilenameInfoProc: fprocmem,
 		},
 	}
 
@@ -38,8 +40,9 @@ func TestNewMemLazy_mock(t *testing.T) {
 
 func TestMemCG2Lazy_info_mock(t *testing.T) {
 	type fields struct {
-		ftotal io.ReadSeekCloser
-		fused  io.ReadSeekCloser
+		ftotal   io.ReadSeekCloser
+		fused    io.ReadSeekCloser
+		fprocmem io.ReadSeekCloser
 	}
 	tests := []struct {
 		name      string
@@ -51,24 +54,27 @@ func TestMemCG2Lazy_info_mock(t *testing.T) {
 		{
 			name: "used zero",
 			fields: fields{
-				ftotal: newMemBufferStatic([]byte(memTotalDataMax)),
-				fused:  newMemBufferStatic([]byte(memUsedZero)),
+				ftotal:   newMemBufferStatic([]byte(memTotalDataMax)),
+				fused:    newMemBufferStatic([]byte(memUsedZero)),
+				fprocmem: newMemBufferStatic([]byte(meminfo)),
 			},
 			wantErr: true,
 		},
 		{
 			name: "total zero",
 			fields: fields{
-				ftotal: newMemBufferStatic([]byte("")),
-				fused:  newMemBufferStatic([]byte(memUsedData1)),
+				ftotal:   newMemBufferStatic([]byte("")),
+				fused:    newMemBufferStatic([]byte(memUsedData1)),
+				fprocmem: newMemBufferStatic([]byte("")),
 			},
 			wantErr: true,
 		},
 		{
 			name: "normal",
 			fields: fields{
-				ftotal: newMemBufferStatic([]byte(memTotalData1)),
-				fused:  newMemBufferStatic([]byte(memUsedData1)),
+				ftotal:   newMemBufferStatic([]byte(memTotalData1)),
+				fused:    newMemBufferStatic([]byte(memUsedData1)),
+				fprocmem: newMemBufferStatic([]byte(meminfo)),
 			},
 			wantTotal: 104857600,
 			wantUsed:  1482752,
@@ -76,10 +82,11 @@ func TestMemCG2Lazy_info_mock(t *testing.T) {
 		{
 			name: "max total",
 			fields: fields{
-				ftotal: newMemBufferStatic([]byte(memTotalDataMax)),
-				fused:  newMemBufferStatic([]byte(memUsedData1)),
+				ftotal:   newMemBufferStatic([]byte(memTotalDataMax)),
+				fused:    newMemBufferStatic([]byte(memUsedData1)),
+				fprocmem: newMemBufferStatic([]byte(meminfo)),
 			},
-			wantTotal: 0,
+			wantTotal: 32338608,
 			wantUsed:  1482752,
 		},
 	}
@@ -87,8 +94,9 @@ func TestMemCG2Lazy_info_mock(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cg := &MemCG2Lazy{
-				ftotal: tt.fields.ftotal,
-				fused:  tt.fields.fused,
+				ftotal:   tt.fields.ftotal,
+				fused:    tt.fields.fused,
+				fprocmem: tt.fields.fprocmem,
 			}
 			total, used, err := cg.info()
 			if (err != nil) != tt.wantErr {
@@ -96,7 +104,7 @@ func TestMemCG2Lazy_info_mock(t *testing.T) {
 				return
 			}
 			if total != tt.wantTotal || used != tt.wantUsed {
-				t.Errorf("cg2mem.getMemInfo() = %d | %d, want %d | %d", used, total, tt.wantUsed, tt.wantTotal)
+				t.Errorf("cg2mem.getMemInfo() = %d | %d, want %d | %d", used, tt.wantUsed, total, tt.wantTotal)
 			}
 		})
 	}

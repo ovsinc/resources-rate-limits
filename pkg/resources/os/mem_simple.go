@@ -20,7 +20,7 @@ func (mem *MemOSSimple) info() (uint64, uint64, error) {
 	}
 	defer f.Close()
 
-	total, used, err := getMemInfo(f)
+	total, used, err := GetMemInfo(f)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -31,14 +31,12 @@ func (mem *MemOSSimple) info() (uint64, uint64, error) {
 func (mem *MemOSSimple) Used() float64 {
 	total, used, err := mem.info()
 	if err != nil {
-		rescommon.Debug("[MemOSSimple]<ERR> Check resource fails with %v", err)
+		rescommon.DbgErrCommon("MemOSSimple", err)
 		return rescommon.FailValue
 	}
 
-	rescommon.Debug(
-		"[MemOSSimple]<INFO> now: %d/%d",
-		used, total,
-	)
+	p := utils.Percent(float64(used), float64(total))
+	rescommon.DbgInfRAM("MemOSSimple", used, total, p)
 
-	return utils.Percent(float64(used), float64(total))
+	return p
 }

@@ -13,11 +13,12 @@ import (
 )
 
 type MemCG2Lazy struct {
-	ftotal io.ReadSeekCloser
-	fused  io.ReadSeekCloser
-	used   *atomic.Float64
-	dur    time.Duration
-	done   chan struct{}
+	ftotal   io.ReadSeekCloser
+	fused    io.ReadSeekCloser
+	fprocmem io.ReadSeekCloser
+	used     *atomic.Float64
+	dur      time.Duration
+	done     chan struct{}
 }
 
 func NewMemLazy(
@@ -51,12 +52,22 @@ func NewMemLazy(
 			)
 	}
 
+	fprocmem := conf.File(rescommon.RAMFilenameInfoProc)
+	if fprocmem == nil {
+		return nil, rescommon.ErrNoResourceReadFile.
+			WithOptions(
+				errors.AppendOperations("cg2.NewMemLazy"),
+				errors.AppendContextInfo("fprocmem", rescommon.RAMFilenameInfoProc),
+			)
+	}
+
 	mem := &MemCG2Lazy{
-		dur:    dur,
-		used:   &atomic.Float64{},
-		ftotal: ftotal,
-		fused:  fused,
-		done:   done,
+		dur:      dur,
+		used:     &atomic.Float64{},
+		ftotal:   ftotal,
+		fused:    fused,
+		fprocmem: fprocmem,
+		done:     done,
 	}
 
 	mem.init()
@@ -69,7 +80,7 @@ func (cg *MemCG2Lazy) Used() float64 {
 }
 
 func (cg *MemCG2Lazy) info() (uint64, uint64, error) {
-	return getMemInfo(cg.ftotal, cg.fused)
+	return getMemInfo(cg.ftotal, cg.fused, cg.fprocmem)
 }
 
 func (cg *MemCG2Lazy) init() {

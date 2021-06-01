@@ -72,11 +72,6 @@ func (cg *CPUCG2Lazy) info() (total uint64, used uint64, err error) {
 }
 
 func (cg *CPUCG2Lazy) init() {
-	var (
-		lastused  uint64
-		lasttotal uint64
-	)
-
 	tick := time.NewTicker(cg.dur)
 
 	go func() {
@@ -94,15 +89,12 @@ func (cg *CPUCG2Lazy) init() {
 					continue
 				}
 
-				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
-				if lasttotal > 0 {
-					p := utils.CPUPercent(lastused, used, lasttotal, total)
-					cg.utilization.Store(p)
-					rescommon.DbgInfCPU("CPUCG2Lazy", lastused, used, lasttotal, total, p)
+				var p float64
+				if used > 0 {
+					p = utils.Percent(float64(used)/1000, float64(total))
 				}
-
-				lastused = used
-				lasttotal = total
+				cg.utilization.Store(p)
+				rescommon.DbgInfCPU("CPUCG2Lazy", 0, used, 0, total, p)
 			}
 		}
 	}()

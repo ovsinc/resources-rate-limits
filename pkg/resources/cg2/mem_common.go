@@ -6,6 +6,7 @@ import (
 	"github.com/ovsinc/errors"
 
 	"github.com/ovsinc/resources-rate-limits/internal/utils"
+	"github.com/ovsinc/resources-rate-limits/pkg/resources/os"
 )
 
 /*
@@ -19,7 +20,7 @@ $ cat /sys/fs/cgroup/memory.current
 528384
 */
 
-func getMemInfo(ftotal, fused io.ReadSeeker) (uint64, uint64, error) {
+func getMemInfo(ftotal, fused, procmem io.ReadSeeker) (uint64, uint64, error) {
 	_, err := ftotal.Seek(0, 0)
 	if err != nil {
 		return 0, 0, err
@@ -35,6 +36,10 @@ func getMemInfo(ftotal, fused io.ReadSeeker) (uint64, uint64, error) {
 	total, err = utils.ReadUintFromF(ftotal)
 	switch {
 	case errors.Is(err, utils.ErrMax):
+		total, _, err = os.GetMemInfo(procmem)
+		if err != nil {
+			return 0, 0, err
+		}
 	case err != nil:
 		return 0, 0, err
 	}

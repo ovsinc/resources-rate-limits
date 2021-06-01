@@ -2,31 +2,15 @@ package cg2
 
 import (
 	"os"
-	"sync"
-	"time"
 
 	"github.com/ovsinc/resources-rate-limits/internal/utils"
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-type CPUCG2Simple struct {
-	mu                  *sync.Mutex
-	prevTotal, prevUsed uint64
-}
+type CPUCG2Simple struct{}
 
 func NewCPUSimple() (rescommon.ResourceViewer, error) {
-	cpu := &CPUCG2Simple{
-		mu: new(sync.Mutex),
-	}
-
-	err := cpu.init()
-	if err != nil {
-		return nil, err
-	}
-
-	// подождем немного для стабилизации
-	time.Sleep(rescommon.CPUSleep)
-
+	cpu := &CPUCG2Simple{}
 	return cpu, nil
 }
 
@@ -46,37 +30,18 @@ func (cg *CPUCG2Simple) info() (total uint64, used uint64, err error) {
 	return getCPUInfo(ftotal, fused)
 }
 
-func (cg *CPUCG2Simple) init() error {
-	total, used, err := cg.info()
-	if err != nil {
-		return err
-	}
-
-	cg.prevUsed = used
-	cg.prevTotal = total
-
-	return nil
-}
-
 func (cg *CPUCG2Simple) Used() float64 {
 	total, used, err := cg.info()
 	if err != nil {
-		rescommon.Debug("[CPUCG2Simple]<ERR> Check resource fails with %v", err)
+		rescommon.DbgErrCommon("CPUCG2Simple", err)
 		return rescommon.FailValue
 	}
 
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
+	var p float64
+	if used > 0 {
+		p = utils.Percent(float64(used)/1000, float64(total))
+	}
+	rescommon.DbgInfCPU("CPUCG2Simple", 0, used, 0, total, p)
 
-	percent := utils.CPUPercent(cg.prevUsed, used, cg.prevTotal, total)
-
-	cg.prevUsed = used
-	cg.prevTotal = total
-
-	rescommon.Debug(
-		"[CPUCG2Simple]<INFO> last: %d/%d now: %d/%d",
-		cg.prevUsed, cg.prevTotal, used, total,
-	)
-
-	return percent
+	return p
 }

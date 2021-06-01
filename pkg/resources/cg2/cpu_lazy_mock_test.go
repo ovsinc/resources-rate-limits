@@ -105,7 +105,7 @@ func TestCPUCG2Lazy_Used_Moc(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	u := cpu.Used()
-	assert.Equal(t, u, float64(0))
+	assert.Equal(t, u, 0.031585)
 }
 
 func TestNewCPULazy(t *testing.T) {
@@ -127,5 +127,5 @@ func TestNewCPULazy(t *testing.T) {
 	time.Sleep(time.Second)
 
 	u := mem.Used()
-	assert.Equal(t, u, float64(0))
+	assert.Equal(t, u, 0.031585)
 }

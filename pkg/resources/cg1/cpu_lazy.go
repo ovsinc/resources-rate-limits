@@ -32,7 +32,7 @@ func NewCPULazy(
 		return nil, rescommon.ErrNoResourceConfig
 	}
 
-	ftotal := conf.File(rescommon.CGroup2CPULimitPath)
+	ftotal := conf.File(rescommon.CGroupCPULimitPath)
 	if ftotal == nil {
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
@@ -41,7 +41,7 @@ func NewCPULazy(
 			)
 	}
 
-	fused := conf.File(rescommon.CGroup2CPUUsagePath)
+	fused := conf.File(rescommon.CGroupCPUUsagePath)
 	if fused == nil {
 		return nil, rescommon.ErrNoResourceReadFile.
 			WithOptions(
@@ -92,11 +92,6 @@ func (cg *CPUCG1Lazy) info() (total uint64, used uint64, err error) {
 }
 
 func (cg *CPUCG1Lazy) init() {
-	var (
-		lastused  uint64
-		lasttotal uint64
-	)
-
 	tick := time.NewTicker(cg.dur)
 
 	go func() {
@@ -114,15 +109,12 @@ func (cg *CPUCG1Lazy) init() {
 					continue
 				}
 
-				// на первом круге (lasttotal == 0) пропускаем установку значения утилизации
-				if lasttotal > 0 {
-					p := utils.CPUPercent(lastused, used, lasttotal, total)
-					cg.utilization.Store(p)
-					rescommon.DbgInfCPU("CPUCG1Lazy", lastused, used, lasttotal, total, p)
+				var p float64
+				if used > 0 {
+					p = utils.Percent(float64(used)/1000000, float64(total))
 				}
-
-				lastused = used
-				lasttotal = total
+				cg.utilization.Store(p)
+				rescommon.DbgInfCPU("CPUCG1Lazy", 0, used, 0, total, p)
 			}
 		}
 	}()

@@ -14,13 +14,13 @@ func NewMemSimple() (rescommon.ResourceViewer, error) {
 }
 
 func (mem *MemCG1Simple) info() (uint64, uint64, error) {
-	flimit, err := os.Open(rescommon.CGroup2MemLimitPath)
+	flimit, err := os.Open(rescommon.CGroupMemLimitPath)
 	if err != nil {
 		return 0, 0, err
 	}
 	defer flimit.Close()
 
-	fused, err := os.Open(rescommon.CGroup2MemUsagePath)
+	fused, err := os.Open(rescommon.CGroupMemUsagePath)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -44,8 +44,12 @@ func (mem *MemCG1Simple) Stop() {}
 func (mem *MemCG1Simple) Used() float64 {
 	total, used, err := mem.info()
 	if err != nil {
+		rescommon.DbgErrCommon("MemCG1Simple", err)
 		return rescommon.FailValue
 	}
 
-	return utils.Percent(float64(used), float64(total))
+	p := utils.Percent(float64(used), float64(total))
+	rescommon.DbgInfRAM("MemCG1Simple", used, total, p)
+
+	return p
 }
