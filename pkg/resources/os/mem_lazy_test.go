@@ -1,7 +1,6 @@
 package os
 
 import (
-	"io"
 	origos "os"
 	"testing"
 	"time"
@@ -50,7 +49,7 @@ func TestMemOSLazy_Used_Sys(t *testing.T) {
 
 func TestMemOSLazy_info_mock(t *testing.T) {
 	type fields struct {
-		f io.ReadSeekCloser
+		f rescommon.ReadSeekCloser
 	}
 	tests := []struct {
 		name      string

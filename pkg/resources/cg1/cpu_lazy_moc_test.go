@@ -1,7 +1,6 @@
 package cg1
 
 import (
-	"io"
 	"testing"
 	"time"
 
@@ -59,8 +58,8 @@ func BenchmarkCPUCG1Lazy_info_moc(b *testing.B) {
 func TestCPUCG1Lazy_info_moc(t *testing.T) {
 	type fields struct {
 		dur         time.Duration
-		ftotal      io.ReadSeekCloser
-		fused       io.ReadSeekCloser
+		ftotal      rescommon.ReadSeekCloser
+		fused       rescommon.ReadSeekCloser
 		utilization *atomic.Float64
 		done        chan struct{}
 	}
@@ -203,7 +202,7 @@ func TestNewCPULazy(t *testing.T) {
 
 	cnf := moc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG1,
-		FF:    make(map[string]io.ReadSeekCloser),
+		FF:    make(map[string]rescommon.ReadSeekCloser),
 	}
 	assert.Nil(t, cnf.Init())
 
@@ -217,7 +216,7 @@ func TestNewCPULazy_Moc(t *testing.T) {
 
 	cnf := moc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG1,
-		FF: map[string]io.ReadSeekCloser{
+		FF: map[string]rescommon.ReadSeekCloser{
 			rescommon.CGroupCPULimitPath: newMocStatic([]byte(CPUtotal)),
 			rescommon.CGroupCPUUsagePath: newMocStatic([]byte(CPUused)),
 		},

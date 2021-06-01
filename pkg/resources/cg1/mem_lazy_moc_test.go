@@ -1,7 +1,6 @@
 package cg1
 
 import (
-	"io"
 	"testing"
 	"time"
 
@@ -57,8 +56,8 @@ func BenchmarkMemCG1Lazy_info_moc(b *testing.B) {
 
 func TestMemCG1Lazy_info_moc(t *testing.T) {
 	type fields struct {
-		ftotal io.ReadSeekCloser
-		fused  io.ReadSeekCloser
+		ftotal rescommon.ReadSeekCloser
+		fused  rescommon.ReadSeekCloser
 		used   *atomic.Float64
 		dur    time.Duration
 		done   chan struct{}
@@ -158,7 +157,7 @@ func TestNewMemLazy(t *testing.T) {
 
 	cnf := moc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG1,
-		FF:    make(map[string]io.ReadSeekCloser),
+		FF:    make(map[string]rescommon.ReadSeekCloser),
 	}
 
 	_, err = NewMemLazy(done, &cnf, 0)
@@ -169,7 +168,7 @@ func TestNewMemLazy(t *testing.T) {
 
 	cnf = moc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG1,
-		FF: map[string]io.ReadSeekCloser{
+		FF: map[string]rescommon.ReadSeekCloser{
 			rescommon.CGroupMemUsagePath: newMocStatic([]byte(MemUsed)),
 			rescommon.CGroupMemLimitPath: newMocStatic([]byte(MemTotal)),
 		},

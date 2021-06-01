@@ -1,7 +1,6 @@
 package cg2
 
 import (
-	"io"
 	"testing"
 	"time"
 
@@ -67,7 +66,7 @@ func TestNewMemLazy_mock(t *testing.T) {
 
 	cnf := &resmoc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG2,
-		FF: map[string]io.ReadSeekCloser{
+		FF: map[string]rescommon.ReadSeekCloser{
 			rescommon.CGroup2MemLimitPath: ftotal,
 			rescommon.CGroup2MemUsagePath: fused,
 			rescommon.RAMFilenameInfoProc: fprocmem,
@@ -86,9 +85,9 @@ func TestNewMemLazy_mock(t *testing.T) {
 
 func TestMemCG2Lazy_info_moc(t *testing.T) {
 	type fields struct {
-		ftotal   io.ReadSeekCloser
-		fused    io.ReadSeekCloser
-		fprocmem io.ReadSeekCloser
+		ftotal   rescommon.ReadSeekCloser
+		fused    rescommon.ReadSeekCloser
+		fprocmem rescommon.ReadSeekCloser
 	}
 	tests := []struct {
 		name      string

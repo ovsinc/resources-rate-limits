@@ -21,7 +21,9 @@ type RateReply struct {
 	Time           time.Time
 }
 
+// Limiter интерфейс лимитера.
 type Limiter interface {
+	// Основной метод
 	Limit() *RateReply
 	With(ops ...Option) Limiter
 }

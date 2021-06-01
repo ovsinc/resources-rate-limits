@@ -1,7 +1,6 @@
 package common
 
 import (
-	"io"
 	"os"
 
 	"go.uber.org/atomic"
@@ -11,7 +10,7 @@ import (
 
 type ResourceConfiger interface {
 	Type() ResourceType
-	File(string) io.ReadSeekCloser
+	File(string) ReadSeekCloser
 	Init() error
 	Stop()
 }
@@ -19,7 +18,7 @@ type ResourceConfiger interface {
 type resourceConfig struct {
 	rtype  ResourceType
 	fnames []string
-	ff     map[string]io.ReadSeekCloser
+	ff     map[string]ReadSeekCloser
 	isinit *atomic.Bool
 }
 
@@ -27,7 +26,7 @@ func NewResourceConfig(rtype ResourceType, fnames ...string) ResourceConfiger {
 	return &resourceConfig{
 		fnames: append(make([]string, 0, len(fnames)), fnames...),
 		rtype:  rtype,
-		ff:     make(map[string]io.ReadSeekCloser),
+		ff:     make(map[string]ReadSeekCloser),
 		isinit: atomic.NewBool(false),
 	}
 }
@@ -56,7 +55,7 @@ func (rc *resourceConfig) Init() error {
 	return err
 }
 
-func (rc *resourceConfig) File(name string) io.ReadSeekCloser {
+func (rc *resourceConfig) File(name string) ReadSeekCloser {
 	return rc.ff[name]
 }
 
@@ -71,7 +70,7 @@ func (rc *resourceConfig) Stop() {
 		}
 	}
 
-	rc.ff = make(map[string]io.ReadSeekCloser)
+	rc.ff = make(map[string]ReadSeekCloser)
 
 	rc.isinit.Store(false)
 }

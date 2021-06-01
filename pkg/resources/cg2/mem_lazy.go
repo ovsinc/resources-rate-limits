@@ -1,7 +1,6 @@
 package cg2
 
 import (
-	"io"
 	"time"
 
 	"github.com/ovsinc/errors"
@@ -13,9 +12,9 @@ import (
 )
 
 type MemCG2Lazy struct {
-	ftotal   io.ReadSeekCloser
-	fused    io.ReadSeekCloser
-	fprocmem io.ReadSeekCloser
+	ftotal   rescommon.ReadSeekCloser
+	fused    rescommon.ReadSeekCloser
+	fprocmem rescommon.ReadSeekCloser
 	used     *atomic.Float64
 	dur      time.Duration
 	done     chan struct{}

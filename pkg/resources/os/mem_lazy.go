@@ -1,7 +1,6 @@
 package os
 
 import (
-	"io"
 	"time"
 
 	"github.com/ovsinc/errors"
@@ -12,7 +11,7 @@ import (
 )
 
 type MemOSLazy struct {
-	f    io.ReadSeekCloser
+	f    rescommon.ReadSeekCloser
 	used *atomic.Float64
 	done chan struct{}
 	dur  time.Duration

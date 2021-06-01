@@ -1,7 +1,6 @@
 package os
 
 import (
-	"io"
 	"os"
 	"testing"
 	"time"
@@ -43,7 +42,7 @@ func TestNewCPULazy_Used_Sys(t *testing.T) {
 	cpu, err := NewCPULazy(done, cnf, 500*time.Millisecond)
 	require.Nil(t, err)
 
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	used := cpu.Used()
 	assert.Greater(t, used, float64(0))
@@ -52,7 +51,7 @@ func TestNewCPULazy_Used_Sys(t *testing.T) {
 
 func TestCPUOSLazy_info_mock(t *testing.T) {
 	type fields struct {
-		f io.ReadSeekCloser
+		f rescommon.ReadSeekCloser
 	}
 	tests := []struct {
 		name      string

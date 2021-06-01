@@ -1,8 +1,6 @@
 package moc
 
 import (
-	"io"
-
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
@@ -10,7 +8,7 @@ var _ rescommon.ResourceConfiger = (*ResourceConfigMoc)(nil)
 
 type ResourceConfigMoc struct {
 	Rtype rescommon.ResourceType
-	FF    map[string]io.ReadSeekCloser
+	FF    map[string]rescommon.ReadSeekCloser
 }
 
 func (rc *ResourceConfigMoc) Init() error {
@@ -21,7 +19,7 @@ func (rc *ResourceConfigMoc) Type() rescommon.ResourceType {
 	return rc.Rtype
 }
 
-func (rc *ResourceConfigMoc) File(name string) io.ReadSeekCloser {
+func (rc *ResourceConfigMoc) File(name string) rescommon.ReadSeekCloser {
 	return rc.FF[name]
 }
 

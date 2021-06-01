@@ -1,7 +1,6 @@
 package os
 
 import (
-	"io"
 	"time"
 
 	"github.com/ovsinc/errors"
@@ -13,7 +12,7 @@ import (
 
 type CPUOSLazy struct {
 	dur         time.Duration
-	f           io.ReadSeekCloser
+	f           rescommon.ReadSeekCloser
 	utilization *atomic.Float64
 	done        chan struct{}
 }

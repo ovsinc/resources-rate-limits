@@ -1,5 +1,7 @@
 package common
 
+import "io"
+
 type ResourceStopper interface {
 	Stop()
 }
@@ -11,4 +13,10 @@ type ResourceViewer interface {
 type Resourcer interface {
 	ResourceStopper
 	ResourceViewer
+}
+
+type ReadSeekCloser interface {
+	io.Reader
+	io.Seeker
+	io.Closer
 }

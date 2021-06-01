@@ -1,7 +1,6 @@
 package cg2
 
 import (
-	"io"
 	"testing"
 	"time"
 
@@ -68,8 +67,8 @@ func BenchmarkCPUCG2Lazy_info_moc(b *testing.B) {
 
 func TestCPUCG2Lazy_info_mock(t *testing.T) {
 	type fields struct {
-		ftotal io.ReadSeekCloser
-		fused  io.ReadSeekCloser
+		ftotal rescommon.ReadSeekCloser
+		fused  rescommon.ReadSeekCloser
 	}
 	tests := []struct {
 		name      string
@@ -152,7 +151,7 @@ func TestNewCPULazy(t *testing.T) {
 
 	cnf := &resmoc.ResourceConfigMoc{
 		Rtype: rescommon.ResourceType_CG2,
-		FF: map[string]io.ReadSeekCloser{
+		FF: map[string]rescommon.ReadSeekCloser{
 			rescommon.CGroup2CPULimitPath: newCPUBufferStatic([]byte(cpuTotalMax)),
 			rescommon.CGroup2CPUUsagePath: newCPUBufferStatic([]byte(cpuStat)),
 		},

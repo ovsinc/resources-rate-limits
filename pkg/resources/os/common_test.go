@@ -3,6 +3,8 @@ package os
 import (
 	"bytes"
 	"io"
+
+	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
 const (
@@ -92,6 +94,6 @@ func (r *mocStatic) Seek(offset int64, whence int) (int64, error) {
 
 func (r *mocStatic) Close() error { return nil }
 
-func newMocStatic(data []byte) io.ReadSeekCloser {
+func newMocStatic(data []byte) rescommon.ReadSeekCloser {
 	return &mocStatic{data: data}
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"testing"
+
+	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
 const (
@@ -51,7 +53,7 @@ func (r *cpuMocStatic) Seek(offset int64, whence int) (int64, error) {
 
 func (r *cpuMocStatic) Close() error { return nil }
 
-func newCPUBufferStatic(data []byte) io.ReadSeekCloser {
+func newCPUBufferStatic(data []byte) rescommon.ReadSeekCloser {
 	return &cpuMocStatic{data: data}
 }
 
@@ -137,7 +139,7 @@ func (r *memMocStatic) Seek(offset int64, whence int) (int64, error) {
 
 func (r *memMocStatic) Close() error { return nil }
 
-func newMemBufferStatic(data []byte) io.ReadSeekCloser {
+func newMemBufferStatic(data []byte) rescommon.ReadSeekCloser {
 	return &memMocStatic{data: data}
 }
 
