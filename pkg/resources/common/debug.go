@@ -20,7 +20,7 @@ func Debug(format string, arg ...interface{}) {
 
 const (
 	FmtErr     = "[%s]<ERR> check resource fails with %v"
-	FmtCPUInfo = "[%s]<INFO> last: %d/%d now: %d/%d (%.2f%%)"
+	FmtCPUInfo = "[%s]<INFO> prev: %d/%d now: %d/%d (%.2f%%)"
 	FmtRAMInfo = "[%s]<INFO> now: %d/%d (%.2f%%)"
 )
 

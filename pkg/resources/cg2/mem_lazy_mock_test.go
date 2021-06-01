@@ -86,7 +86,7 @@ func TestMemCG2Lazy_info_mock(t *testing.T) {
 				fused:    newMemBufferStatic([]byte(memUsedData1)),
 				fprocmem: newMemBufferStatic([]byte(meminfo)),
 			},
-			wantTotal: 32338608,
+			wantTotal: 33114734592,
 			wantUsed:  1482752,
 		},
 	}

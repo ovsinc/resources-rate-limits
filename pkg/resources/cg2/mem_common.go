@@ -36,10 +36,11 @@ func getMemInfo(ftotal, fused, procmem io.ReadSeeker) (uint64, uint64, error) {
 	total, err = utils.ReadUintFromF(ftotal)
 	switch {
 	case errors.Is(err, utils.ErrMax):
-		total, _, err = os.GetMemInfo(procmem)
+		total, _, err = os.GetMemInfo(procmem) // in kb
 		if err != nil {
 			return 0, 0, err
 		}
+		total = total * 1024
 	case err != nil:
 		return 0, 0, err
 	}
