@@ -3,6 +3,7 @@ package resourcesratelimits
 import (
 	"time"
 
+	"github.com/ovsinc/resources-rate-limits/pkg/resources/cg1"
 	"github.com/ovsinc/resources-rate-limits/pkg/resources/cg2"
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 	"github.com/ovsinc/resources-rate-limits/pkg/resources/os"
@@ -22,6 +23,9 @@ func AutoCPUSimple(t rescommon.ResourceType) (ResourceViewer, error) {
 	case rescommon.ResourceType_CG2:
 		res, _ = cg2.NewCPUSimple()
 
+	case rescommon.ResourceType_CG1:
+		res, _ = cg1.NewCPUSimple()
+
 	default:
 		return nil, rescommon.ErrNoResourcer
 	}
@@ -33,10 +37,13 @@ func AutoRAMSimple(t rescommon.ResourceType) (ResourceViewer, error) {
 	var res ResourceViewer
 	switch t {
 	case rescommon.ResourceType_OS:
-		res, _ = os.NewCPUSimple()
+		res, _ = os.NewMemSimple()
 
 	case rescommon.ResourceType_CG2:
-		res, _ = cg2.NewCPUSimple()
+		res, _ = cg2.NewMemSimple()
+
+	case rescommon.ResourceType_CG1:
+		res, _ = cg1.NewMemSimple()
 
 	default:
 		return nil, rescommon.ErrNoResourcer
@@ -55,6 +62,9 @@ func AutoLazyRAM(
 
 	case rescommon.ResourceType_CG2:
 		res, err = cg2.NewMemLazy(done, rt, dur)
+
+	case rescommon.ResourceType_CG1:
+		res, err = cg1.NewMemLazy(done, rt, dur)
 
 	default:
 		return nil, rescommon.ErrNoResourcer
@@ -77,6 +87,9 @@ func AutoLazyCPU(
 
 	case rescommon.ResourceType_CG2:
 		res, err = cg2.NewCPULazy(done, rt, dur)
+
+	case rescommon.ResourceType_CG1:
+		res, err = cg1.NewCPULazy(done, rt, dur)
 
 	default:
 		return nil, rescommon.ErrNoResourcer

@@ -24,7 +24,7 @@ func Check() rescommon.ResourceConfiger {
 	switch {
 	case check(rescommon.CGroupCPULimitPath, rescommon.CGroupMemLimitPath):
 		t = rescommon.ResourceType_CG1
-		files = rescommon.CGroupFiles
+		files = rescommon.CGroup1Files
 
 	case check(rescommon.CGroup2CPULimitPath, rescommon.CGroup2MemLimitPath):
 		t = rescommon.ResourceType_CG2

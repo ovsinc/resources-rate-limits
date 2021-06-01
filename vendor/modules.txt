@@ -53,9 +53,6 @@ github.com/ovsinc/multilog/common
 github.com/ovsinc/multilog/golog
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/sirupsen/logrus v1.8.1
-## explicit
-github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.7.0
 ## explicit
 github.com/stretchr/testify/assert

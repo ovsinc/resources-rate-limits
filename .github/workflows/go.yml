@@ -1,0 +1,91 @@
+name: Go
+
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+      - "README.md"
+      - "README_rus.md"
+      - Makefile
+      - ".gitignore"
+    branches:
+      - master
+      - main
+      - releases
+  pull_request:
+    branches:
+      - master
+      - main
+      - releases
+
+jobs:
+  test:
+      name: Tests
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          go-version: [1.16.x, 1.15.x, 1.14.x]
+          os: [ubuntu-latest]
+      steps:
+        - name: Install Go
+          uses: actions/setup-go@v2
+          with:
+            go-version: ${{ matrix.go-version }}
+        - name: Checkout code
+          uses: actions/checkout@v2
+        - name: Run Unit tests
+          run: |
+            go test -mod=vendor -v -race $(go list ./... | grep -v vendor | grep -v internal)
+            CXX=clang++ CC=clang go test -mod=vendor -v -msan $(go list ./... | grep -v vendor | grep -v internal)
+        - uses: actions/cache@v2
+          with:
+            path: |
+              ~/go/pkg/mod
+              ~/.cache/go-build
+            key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            restore-keys: |
+              ${{ runner.os }}-go-
+
+  lint:
+    name: Lint the code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+            ~/go/pkg
+          key: golangci-lint.cache-{platform-arch}-{interval_number}-{go.mod_hash}
+          restore-keys: |
+            golangci-lint.cache-{interval_number}-
+            golangci-lint.cache-
+
+  build:
+    name: Build
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Coverage report.
+        run: go test -short -coverprofile coverage.txt -covermode=atomic
+      - name: Upload Coverage report to CodeCov
+        uses: codecov/codecov-action@v1.0.0
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          file: ./coverage.txt
+      - name: Download module
+        env: 
+           GOPROXY: "https://proxy.golang.org"
+        run: go get -d github.com/ovsinc/resources-rate-limits
