@@ -39,8 +39,6 @@ func (mem *MemCG1Simple) info() (uint64, uint64, error) {
 	return limit, used, nil
 }
 
-func (mem *MemCG1Simple) Stop() {}
-
 func (mem *MemCG1Simple) Used() float64 {
 	total, used, err := mem.info()
 	if err != nil {

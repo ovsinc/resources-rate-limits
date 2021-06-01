@@ -12,14 +12,51 @@ import (
 	"go.uber.org/atomic"
 )
 
-func BenchmarkCPUCG2Lazy_info_mock(b *testing.B) {
+func BenchmarkCPUCG2Lazy_Used_moc(b *testing.B) {
+	done := make(chan struct{})
+	defer close(done)
+
 	cpu := &CPUCG2Lazy{
-		ftotal: newCPUBufferStatic([]byte(cpuTotalMax)),
-		fused:  newCPUBufferStatic([]byte(cpuStat)),
+		ftotal:      newCPUBufferStatic([]byte(cpuTotalMax)),
+		fused:       newCPUBufferStatic([]byte(cpuStat)),
+		utilization: &atomic.Float64{},
+		dur:         100 * time.Millisecond,
+		done:        done,
 	}
 
-	_, _, err := cpu.info()
+	cpu.init()
+
+	time.Sleep(300 * time.Millisecond)
+
+	u := cpu.Used()
+	require.Equal(b, u, 0.031585)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = cpu.Used()
+	}
+}
+
+func BenchmarkCPUCG2Lazy_info_moc(b *testing.B) {
+	done := make(chan struct{})
+	defer close(done)
+
+	cpu := &CPUCG2Lazy{
+		ftotal:      newCPUBufferStatic([]byte(cpuTotalMax)),
+		fused:       newCPUBufferStatic([]byte(cpuStat)),
+		utilization: &atomic.Float64{},
+		dur:         100 * time.Millisecond,
+		done:        done,
+	}
+
+	cpu.init()
+
+	time.Sleep(300 * time.Millisecond)
+
+	total, used, err := cpu.info()
 	require.Nil(b, err)
+	require.Equal(b, total, uint64(100000))
+	require.Equal(b, used, uint64(31585))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -90,19 +127,20 @@ func TestCPUCG2Lazy_info_mock(t *testing.T) {
 }
 
 func TestCPUCG2Lazy_Used_Moc(t *testing.T) {
+	done := make(chan struct{})
+	defer close(done)
+
 	cpu := &CPUCG2Lazy{
 		ftotal:      newCPUBufferStatic([]byte(cpuTotalMax)),
 		fused:       newCPUBufferStatic([]byte(cpuStat)),
 		utilization: &atomic.Float64{},
-		dur:         500 * time.Millisecond,
+		dur:         100 * time.Millisecond,
+		done:        done,
 	}
-
-	done := make(chan struct{})
-	defer close(done)
 
 	cpu.init()
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(300 * time.Millisecond)
 
 	u := cpu.Used()
 	assert.Equal(t, u, 0.031585)
@@ -124,7 +162,7 @@ func TestNewCPULazy(t *testing.T) {
 	mem, err := NewCPULazy(done, cnf, 100*time.Millisecond)
 	assert.Nil(t, err)
 
-	time.Sleep(time.Second)
+	time.Sleep(300 * time.Millisecond)
 
 	u := mem.Used()
 	assert.Equal(t, u, 0.031585)

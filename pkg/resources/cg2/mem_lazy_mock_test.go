@@ -8,8 +8,54 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 	resmoc "github.com/ovsinc/resources-rate-limits/pkg/resources/common/moc"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/atomic"
 )
+
+func BenchmarkMemCG2Lazy_info_moc(b *testing.B) {
+	mem := &MemCG2Lazy{
+		ftotal: newMemBufferStatic([]byte(memTotalData1)),
+		fused:  newMemBufferStatic([]byte(memUsedData1)),
+		dur:    100 * time.Millisecond,
+	}
+
+	total, used, err := mem.info()
+	require.Nil(b, err)
+	require.Equal(b, total, uint64(104857600))
+	require.Equal(b, used, uint64(1482752))
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = mem.info()
+	}
+}
+
+func BenchmarkMemCG2Lazy_Used_moc(b *testing.B) {
+	done := make(chan struct{})
+	defer close(done)
+
+	mem := &MemCG2Lazy{
+		ftotal: newMemBufferStatic([]byte(memTotalData1)),
+		fused:  newMemBufferStatic([]byte(memUsedData1)),
+		used:   &atomic.Float64{},
+		dur:    100 * time.Millisecond,
+		done:   done,
+	}
+
+	mem.init()
+
+	time.Sleep(300 * time.Millisecond)
+
+	u := mem.Used()
+	require.Equal(b, u, 1.4140625)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = mem.Used()
+	}
+}
+
+//
 
 func TestNewMemLazy_mock(t *testing.T) {
 	done := make(chan struct{})
@@ -38,7 +84,7 @@ func TestNewMemLazy_mock(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestMemCG2Lazy_info_mock(t *testing.T) {
+func TestMemCG2Lazy_info_moc(t *testing.T) {
 	type fields struct {
 		ftotal   io.ReadSeekCloser
 		fused    io.ReadSeekCloser
@@ -110,7 +156,7 @@ func TestMemCG2Lazy_info_mock(t *testing.T) {
 	}
 }
 
-func TestMemCG2Lazy_Used_mock(t *testing.T) {
+func TestMemCG2Lazy_Used_moc(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
@@ -119,13 +165,13 @@ func TestMemCG2Lazy_Used_mock(t *testing.T) {
 		fused:  newMemBufferStatic([]byte(memUsedData1)),
 		used:   &atomic.Float64{},
 		dur:    100 * time.Millisecond,
+		done:   done,
 	}
 
 	mem.init()
 
-	time.Sleep(time.Second)
+	time.Sleep(300 * time.Millisecond)
 
 	u := mem.Used()
-	assert.Greater(t, u, float64(0))
-	assert.Less(t, u, float64(100))
+	assert.Equal(t, u, 1.4140625)
 }

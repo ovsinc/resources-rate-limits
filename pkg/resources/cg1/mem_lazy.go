@@ -33,22 +33,32 @@ func NewMemLazy(
 		return nil, rescommon.ErrNoResourceConfig
 	}
 
+	var err error
+
 	ftotal := conf.File(rescommon.CGroupMemLimitPath)
 	if ftotal == nil {
-		return nil, rescommon.ErrNoResourceReadFile.
-			WithOptions(
+		err = errors.Wrap(
+			err,
+			rescommon.ErrNoResourceReadFile.WithOptions(
 				errors.AppendContextInfo("ftotal", rescommon.CGroup2MemLimitPath),
 				errors.AppendOperations("NewMemLazy"),
-			)
+			),
+		)
 	}
 
 	fused := conf.File(rescommon.CGroupMemUsagePath)
 	if fused == nil {
-		return nil, rescommon.ErrNoResourceReadFile.
-			WithOptions(
+		err = errors.Wrap(
+			err,
+			rescommon.ErrNoResourceReadFile.WithOptions(
 				errors.AppendContextInfo("fused", rescommon.CGroup2MemUsagePath),
 				errors.AppendOperations("NewMemLazy"),
-			)
+			),
+		)
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	mem := &MemCG1Lazy{

@@ -32,22 +32,32 @@ func NewCPULazy(
 		return nil, rescommon.ErrNoResourceConfig
 	}
 
+	var err error
+
 	ftotal := conf.File(rescommon.CGroupCPULimitPath)
 	if ftotal == nil {
-		return nil, rescommon.ErrNoResourceReadFile.
-			WithOptions(
+		err = errors.Wrap(
+			err,
+			rescommon.ErrNoResourceReadFile.WithOptions(
 				errors.AppendContextInfo("ftotal", rescommon.CGroup2CPULimitPath),
 				errors.AppendOperations("cg1.NewCPULazy"),
-			)
+			),
+		)
 	}
 
 	fused := conf.File(rescommon.CGroupCPUUsagePath)
 	if fused == nil {
-		return nil, rescommon.ErrNoResourceReadFile.
-			WithOptions(
+		err = errors.Wrap(
+			err,
+			rescommon.ErrNoResourceReadFile.WithOptions(
 				errors.AppendOperations("cg1.NewCPULazy"),
 				errors.AppendContextInfo("fused", rescommon.CGroup2CPUUsagePath),
-			)
+			),
+		)
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	cpu := &CPUCG1Lazy{
