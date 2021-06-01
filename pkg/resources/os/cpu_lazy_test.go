@@ -1,7 +1,6 @@
 package os
 
 import (
-	"bytes"
 	"io"
 	"os"
 	"testing"
@@ -13,48 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	data1 = `cpu  695636 4341 199895 27915902 7970 31786 16794 0 0 0
-	cpu0 34184 339 10252 1296456 353 1077 1570 0 0 0
-	cpu1 37919 380 10769 1294946 378 1185 693 0 0 0
-	cpu2 38275 395 10732 1292207 451 1399 2039 0 0 0
-	cpu3 38566 372 10888 1294215 423 1013 535 0 0 0
-	cpu4 38375 321 10814 1294723 442 1081 430 0 0 0
-	cpu5 30476 299 11449 1293194 401 6597 1461 0 0 0
-	cpu6 40492 206 11235 1291149 407 1166 647 0 0 0
-	cpu7 38739 399 11198 1294028 442 1016 379 0 0`
-	data0 = ""
-)
-
-type rsMocStatic struct {
-	data []byte
-	done bool
-}
-
-func (r *rsMocStatic) Read(p []byte) (n int, err error) {
-	if r.done {
-		return 0, io.EOF
-	}
-	buf := bytes.NewBuffer(r.data)
-	r.done = true
-	return buf.Read(p)
-}
-
-func (r *rsMocStatic) Seek(offset int64, whence int) (int64, error) {
-	return 0, nil
-}
-
-func (r *rsMocStatic) Close() error { return nil }
-
-func newBufferStatic(data []byte) io.ReadSeekCloser {
-	return &rsMocStatic{data: data}
-}
-
-//
-
 func BenchmarkCPUOSLazy_info_mock(b *testing.B) {
 	cpu := &CPUOSLazy{
-		f: newBufferStatic([]byte(data1)),
+		f: newMocStatic([]byte(data1)),
 	}
 
 	_, _, err := cpu.info()
@@ -104,7 +64,7 @@ func TestCPUOSLazy_info_mock(t *testing.T) {
 		{
 			name: "empty",
 			fields: fields{
-				f: newBufferStatic([]byte(data0)),
+				f: newMocStatic([]byte(data0)),
 			},
 			wantTotal: 0,
 			wantUsed:  0,
@@ -113,7 +73,7 @@ func TestCPUOSLazy_info_mock(t *testing.T) {
 		{
 			name: "< 7 args",
 			fields: fields{
-				f: newBufferStatic([]byte("cpu  695636 4341 199895 27915902")),
+				f: newMocStatic([]byte("cpu  695636 4341 199895 27915902")),
 			},
 			wantTotal: 0,
 			wantUsed:  0,
@@ -122,7 +82,7 @@ func TestCPUOSLazy_info_mock(t *testing.T) {
 		{
 			name: "normal",
 			fields: fields{
-				f: newBufferStatic([]byte(data1)),
+				f: newMocStatic([]byte(data1)),
 			},
 			wantTotal: 28872324,
 			wantUsed:  948452,

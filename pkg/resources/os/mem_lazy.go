@@ -67,7 +67,9 @@ func (mem *MemOSLazy) init() {
 		for {
 			select {
 			case <-mem.done:
+				mem.used.Store(rescommon.DoneValue)
 				return
+
 			case <-tick.C:
 				total, used, err := mem.info()
 				if err != nil {

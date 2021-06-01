@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func BenchmarkCPUOSSimple_info_mock(b *testing.B) {
+func BenchmarkCPUOSSimple_info_Sys(b *testing.B) {
 	cpu := &CPUOSSimple{}
 
 	_, _, err := cpu.info()

@@ -101,7 +101,9 @@ func (cg *MemCG2Lazy) init() {
 		for {
 			select {
 			case <-cg.done:
+				cg.used.Store(rescommon.DoneValue)
 				return
+
 			case <-tick.C:
 				total, used, err := cg.info()
 				if err != nil {

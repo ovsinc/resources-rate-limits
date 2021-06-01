@@ -87,6 +87,7 @@ func (cg *CPUCG2Lazy) init() {
 		for {
 			select {
 			case <-cg.done:
+				cg.utilization.Store(rescommon.DoneValue)
 				return
 
 			case <-tick.C:

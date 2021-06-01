@@ -72,6 +72,7 @@ func (cpu *CPUOSLazy) init() {
 		for {
 			select {
 			case <-cpu.done:
+				cpu.utilization.Store(rescommon.DoneValue)
 				return
 
 			case <-tick.C:

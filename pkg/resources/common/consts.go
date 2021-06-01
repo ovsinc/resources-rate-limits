@@ -28,6 +28,7 @@ const (
 	DefaultDuration = 3 * time.Second
 
 	FailValue = -1.0
+	DoneValue = -2.0
 )
 
 var (
