@@ -7,20 +7,25 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-type MemCG1Simple struct{}
+type MemCG1Simple struct {
+	limit, used string
+}
 
 func NewMemSimple() (rescommon.ResourceViewer, error) {
-	return &MemCG1Simple{}, nil
+	return &MemCG1Simple{
+		limit: rescommon.CGroupMemLimitPath,
+		used:  rescommon.CGroupMemUsagePath,
+	}, nil
 }
 
 func (mem *MemCG1Simple) info() (uint64, uint64, error) {
-	flimit, err := os.Open(rescommon.CGroupMemLimitPath)
+	flimit, err := os.Open(mem.limit)
 	if err != nil {
 		return 0, 0, err
 	}
 	defer flimit.Close()
 
-	fused, err := os.Open(rescommon.CGroupMemUsagePath)
+	fused, err := os.Open(mem.used)
 	if err != nil {
 		return 0, 0, err
 	}

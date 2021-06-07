@@ -7,21 +7,25 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-type CPUCG2Simple struct{}
+type CPUCG2Simple struct {
+	limit, used string
+}
 
 func NewCPUSimple() (rescommon.ResourceViewer, error) {
-	cpu := &CPUCG2Simple{}
-	return cpu, nil
+	return &CPUCG2Simple{
+		limit: rescommon.CGroup2CPULimitPath,
+		used:  rescommon.CGroup2CPUUsagePath,
+	}, nil
 }
 
 func (cg *CPUCG2Simple) info() (total uint64, used uint64, err error) {
-	ftotal, err := os.Open(rescommon.CGroup2CPULimitPath)
+	ftotal, err := os.Open(cg.limit)
 	if err != nil {
 		return 0, 0, err
 	}
 	defer ftotal.Close()
 
-	fused, err := os.Open(rescommon.CGroup2CPUUsagePath)
+	fused, err := os.Open(cg.used)
 	if err != nil {
 		return 0, 0, err
 	}

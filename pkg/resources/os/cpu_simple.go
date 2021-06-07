@@ -11,11 +11,13 @@ import (
 type CPUOSSimple struct {
 	mu                  *sync.Mutex
 	prevTotal, prevUsed uint64
+	stat                string
 }
 
 func NewCPUSimple() (rescommon.ResourceViewer, error) {
 	cpu := &CPUOSSimple{
-		mu: new(sync.Mutex),
+		mu:   new(sync.Mutex),
+		stat: rescommon.CPUfilenameInfoProc,
 	}
 
 	err := cpu.init()
@@ -46,7 +48,7 @@ func (cpu *CPUOSSimple) Used() float64 {
 }
 
 func (cpu *CPUOSSimple) info() (total uint64, used uint64, err error) {
-	f, err := os.Open(rescommon.CPUfilenameInfoProc)
+	f, err := os.Open(cpu.stat)
 	if err != nil {
 		return 0, 0, err
 	}

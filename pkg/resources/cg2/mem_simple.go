@@ -8,26 +8,33 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-type MemCG2Simple struct{}
+type MemCG2Simple struct {
+	total, used string
+	proc        string
+}
 
 func NewMemSimple() (rescommon.ResourceViewer, error) {
-	return &MemCG2Simple{}, nil
+	return &MemCG2Simple{
+		total: rescommon.CGroup2MemLimitPath,
+		used:  rescommon.CGroup2CPUUsagePath,
+		proc:  rescommon.RAMFilenameInfoProc,
+	}, nil
 }
 
 func (cg *MemCG2Simple) info() (uint64, uint64, error) {
-	ftotal, err := os.Open(rescommon.CGroup2MemLimitPath)
+	ftotal, err := os.Open(cg.total)
 	if err != nil {
 		return 0, 0, err
 	}
 	defer ftotal.Close()
 
-	fused, err := os.Open(rescommon.CGroup2CPUUsagePath)
+	fused, err := os.Open(cg.used)
 	if err != nil {
 		return 0, 0, err
 	}
 	defer fused.Close()
 
-	fprocmem, err := os.Open(rescommon.RAMFilenameInfoProc)
+	fprocmem, err := os.Open(cg.proc)
 	if err != nil {
 		return 0, 0, err
 	}

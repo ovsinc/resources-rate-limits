@@ -7,14 +7,18 @@ import (
 	rescommon "github.com/ovsinc/resources-rate-limits/pkg/resources/common"
 )
 
-type MemOSSimple struct{}
+type MemOSSimple struct {
+	stat string
+}
 
 func NewMemSimple() (rescommon.ResourceViewer, error) {
-	return &MemOSSimple{}, nil
+	return &MemOSSimple{
+		stat: rescommon.RAMFilenameInfoProc,
+	}, nil
 }
 
 func (mem *MemOSSimple) info() (uint64, uint64, error) {
-	f, err := os.Open(rescommon.RAMFilenameInfoProc)
+	f, err := os.Open(mem.stat)
 	if err != nil {
 		return 0, 0, err
 	}
