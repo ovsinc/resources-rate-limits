@@ -127,7 +127,7 @@ func TestMemCG1Lazy_info_moc(t *testing.T) {
 	}
 }
 
-func TestMemCG1Lazy_Used(t *testing.T) {
+func TestMemCG1Lazy_Used_moc(t *testing.T) {
 	done := make(chan struct{})
 	memDone := &MemCG1Lazy{
 		ftotal: newMocStatic([]byte("")),
@@ -194,23 +194,6 @@ func TestMemCG1Lazy_Used(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMemCG1Lazy_Used_moc(t *testing.T) {
-	done := make(chan struct{})
-	defer close(done)
-
-	mem := &MemCG1Lazy{
-		ftotal: newMocStatic([]byte(MemTotal)),
-		fused:  newMocStatic([]byte(MemUsed)),
-		dur:    100 * time.Millisecond,
-		used:   &atomic.Float64{},
-		done:   done,
-	}
-	mem.init()
-
-	u := mem.Used()
-	assert.Equal(t, u, 2.8125)
 }
 
 func TestNewMemLazy(t *testing.T) {
